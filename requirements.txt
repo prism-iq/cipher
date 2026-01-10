@@ -16,6 +16,10 @@ python-dotenv>=1.0.0
 sentence-transformers>=2.2.0
 numpy>=1.24.0
 
+# NLP extraction (spaCy)
+spacy>=3.7.0
+# Download model after install: python -m spacy download en_core_web_sm
+
 # Optional: Better XML parsing for arXiv
 # lxml>=5.0.0
 

@@ -27,6 +27,14 @@ import asyncpg
 
 from .hash_learning import HashLearning, EntropyScore
 from .embeddings import EmbeddingService, get_embedding_service
+from .nlp_extractor import (
+    NLPExtractor, get_nlp_extractor,
+    ExtractedClaim as NLPClaim,
+    ClaimType as NLPClaimType,
+    EvidenceStrength as NLPEvidenceStrength,
+    CausalRelation,
+    ScientificEntity
+)
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +53,7 @@ class Domain(Enum):
 class Claim:
     """An extracted assertion from a paper"""
     text: str
-    claim_type: str  # hypothesis, finding, method, definition
+    claim_type: str  # hypothesis, finding, method, definition, observation, conclusion
     confidence: float
     evidence_strength: str
     domains: List[Domain]
@@ -57,6 +65,9 @@ class Claim:
     effect_size: Optional[float] = None
     entropy_hash: Optional[str] = None
     embedding: Optional[List[float]] = None  # Semantic embedding vector
+    causal_relations: List[Dict[str, Any]] = field(default_factory=list)  # Extracted causal relations
+    hedging_markers: List[str] = field(default_factory=list)  # Uncertainty indicators
+    negation: bool = False  # Whether claim is negated
 
 
 @dataclass
@@ -102,13 +113,14 @@ class CipherBrain:
     and generates new hypotheses through cross-domain synthesis.
     """
 
-    def __init__(self, db_url: str, embedding_model: str = "all-MiniLM-L6-v2"):
+    def __init__(self, db_url: str, embedding_model: str = "all-MiniLM-L6-v2", use_nlp: bool = True):
         """
         Initialize the brain.
 
         Args:
             db_url: PostgreSQL connection string
             embedding_model: Sentence transformer model for embeddings
+            use_nlp: Whether to use NLP-based extraction (requires spaCy)
         """
         self.db_url = db_url
         self.pool: Optional[asyncpg.Pool] = None
@@ -118,6 +130,17 @@ class CipherBrain:
         # Embedding service for semantic representations
         self.embedding_service = get_embedding_service(embedding_model)
         self._embeddings_enabled = True
+
+        # NLP extractor for advanced claim extraction
+        self._use_nlp = use_nlp
+        self._nlp_extractor: Optional[NLPExtractor] = None
+        if use_nlp:
+            try:
+                self._nlp_extractor = get_nlp_extractor()
+                logger.info("NLP extractor initialized")
+            except ImportError as e:
+                logger.warning(f"NLP extractor not available: {e}. Falling back to regex.")
+                self._use_nlp = False
 
         # Learning state
         self.session_id: Optional[str] = None
@@ -228,16 +251,118 @@ class CipherBrain:
         """
         Extract claims from paper title and abstract.
 
-        Uses pattern matching and heuristics to identify:
+        Uses NLP-based extraction (spaCy) when available, with fallback to regex.
+        Identifies:
         - Hypotheses (proposed but not tested)
         - Findings (empirically tested claims)
         - Methods (novel techniques)
         - Definitions (new terms or concepts)
+        - Observations and Conclusions
         """
         claims = []
 
         if not abstract:
             return claims
+
+        # Use NLP extractor if available
+        if self._use_nlp and self._nlp_extractor:
+            claims = await self._extract_claims_nlp(title, abstract, domains)
+        else:
+            claims = await self._extract_claims_regex(title, abstract, domains)
+
+        # Generate embeddings for all claims in batch
+        if claims and self._embeddings_enabled:
+            try:
+                claim_texts = [c.text for c in claims]
+                embedding_results = await self.embedding_service.embed_batch(claim_texts)
+                for claim, emb_result in zip(claims, embedding_results):
+                    claim.embedding = emb_result.vector
+            except Exception as e:
+                logger.warning(f"Failed to generate embeddings: {e}")
+
+        await self.think(
+            'observation',
+            f"Extracted {len(claims)} claims from '{title[:50]}...' using {'NLP' if self._use_nlp else 'regex'}",
+            domains=domains,
+            importance=0.4
+        )
+
+        return claims
+
+    async def _extract_claims_nlp(self, title: str, abstract: str,
+                                   domains: List[Domain]) -> List[Claim]:
+        """
+        Extract claims using NLP-based analysis.
+
+        Uses spaCy for:
+        - Named Entity Recognition
+        - Dependency parsing for causal relations
+        - Linguistic feature analysis for confidence scoring
+        """
+        claims = []
+
+        try:
+            nlp_claims = self._nlp_extractor.extract_claims(abstract, title)
+
+            for nlp_claim in nlp_claims:
+                # Apply systematic doubt
+                doubt_result = await self.question(nlp_claim.text)
+                adjusted_confidence = max(0.1, min(0.95,
+                    nlp_claim.confidence + doubt_result['confidence_adjustment']))
+
+                # Convert NLP entities to string list
+                entity_texts = [e.text for e in nlp_claim.entities]
+
+                # Convert causal relations to dict format
+                causal_dicts = [
+                    {
+                        'cause': cr.cause,
+                        'effect': cr.effect,
+                        'relation_type': cr.relation_type,
+                        'confidence': cr.confidence,
+                        'negated': cr.negated,
+                        'hedged': cr.hedged
+                    }
+                    for cr in nlp_claim.causal_relations
+                ]
+
+                # Extract statistical info
+                stats = nlp_claim.statistical_info
+                sample_size = stats.get('sample_size')
+                p_value = stats.get('p_value', {}).get('value') if 'p_value' in stats else None
+                effect_size = stats.get('effect_size', {}).get('value') if 'effect_size' in stats else None
+
+                # Compute entropy hash
+                entropy = self.hash_learner.analyze(nlp_claim.text)
+
+                claims.append(Claim(
+                    text=nlp_claim.text,
+                    claim_type=nlp_claim.claim_type.value,
+                    confidence=adjusted_confidence,
+                    evidence_strength=nlp_claim.evidence_strength.value,
+                    domains=domains,
+                    entities=entity_texts,
+                    sample_size=sample_size,
+                    p_value=p_value,
+                    effect_size=effect_size,
+                    entropy_hash=entropy.hash,
+                    causal_relations=causal_dicts,
+                    hedging_markers=nlp_claim.hedging_markers,
+                    negation=nlp_claim.negation
+                ))
+
+        except Exception as e:
+            logger.warning(f"NLP extraction failed: {e}. Falling back to regex.")
+            return await self._extract_claims_regex(title, abstract, domains)
+
+        return claims
+
+    async def _extract_claims_regex(self, title: str, abstract: str,
+                                     domains: List[Domain]) -> List[Claim]:
+        """
+        Extract claims using regex patterns (fallback method).
+        """
+        claims = []
 
         # Split abstract into sentences
         sentences = re.split(r'(?<=[.!?])\s+', abstract)
@@ -333,24 +458,6 @@ class CipherBrain:
                     entities=entities,
                     entropy_hash=entropy.hash
                 ))
-
-        # Generate embeddings for all claims in batch
-        if claims and self._embeddings_enabled:
-            try:
-                claim_texts = [c.text for c in claims]
-                embedding_results = await self.embedding_service.embed_batch(claim_texts)
-                for claim, emb_result in zip(claims, embedding_results):
-                    claim.embedding = emb_result.vector
-            except Exception as e:
-                logger.warning(f"Failed to generate embeddings: {e}")
-                # Continue without embeddings
-
-        await self.think(
-            'observation',
-            f"Extracted {len(claims)} claims from '{title[:50]}...'",
-            domains=domains,
-            importance=0.4
-        )
 
         return claims
 

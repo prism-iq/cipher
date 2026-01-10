@@ -16,6 +16,18 @@ from .embeddings import (
     embed_texts,
     compute_similarity
 )
+from .nlp_extractor import (
+    NLPExtractor,
+    get_nlp_extractor,
+    extract_claims as nlp_extract_claims,
+    extract_entities as nlp_extract_entities,
+    extract_causal_relations,
+    ClaimType,
+    EvidenceStrength,
+    CausalRelation,
+    ScientificEntity,
+    ExtractedClaim
+)
 
 __all__ = [
     # Hash Learning
@@ -48,4 +60,16 @@ __all__ = [
     'embed_text',
     'embed_texts',
     'compute_similarity',
+
+    # NLP Extraction
+    'NLPExtractor',
+    'get_nlp_extractor',
+    'nlp_extract_claims',
+    'nlp_extract_entities',
+    'extract_causal_relations',
+    'ClaimType',
+    'EvidenceStrength',
+    'CausalRelation',
+    'ScientificEntity',
+    'ExtractedClaim',
 ]

@@ -21,7 +21,7 @@ import math
 
 import asyncpg
 
-from .cipher_brain import Domain, Claim, Connection, Pattern
+from .cipher_brain import Domain, Claim, Connection, Pattern, STOPWORDS
 from .hash_learning import HashLearning
 
 logger = logging.getLogger(__name__)
@@ -128,7 +128,12 @@ class PatternDetector:
                 domains = [Domain(d) for d in (row['domains'] or [])]
 
                 for entity in entities:
-                    entity_lower = entity.lower()
+                    entity_lower = entity.lower().strip()
+                    # Skip stopwords, short entities, and purely numeric entities
+                    if (entity_lower in STOPWORDS or
+                        len(entity_lower) < 3 or
+                        entity_lower.isdigit()):
+                        continue
                     if entity_lower not in self._entity_index:
                         self._entity_index[entity_lower] = []
                     self._entity_index[entity_lower].append(row['id'])
@@ -186,6 +191,14 @@ class PatternDetector:
 
         for entity, claim_ids in self._entity_index.items():
             if len(claim_ids) < 2:
+                continue
+
+            # Skip stopwords, short entities, and purely numeric entities
+            entity_lower = entity.lower().strip()
+            if (entity_lower in STOPWORDS or
+                len(entity_lower) < 3 or
+                entity_lower.isdigit() or
+                all(word in STOPWORDS for word in entity_lower.split())):
                 continue
 
             # Get domains for these claims

@@ -38,6 +38,52 @@ from .nlp_extractor import (
 
 logger = logging.getLogger(__name__)
 
+# Stopwords to filter from pattern detection
+STOPWORDS = frozenset({
+    # Articles & determiners
+    'a', 'an', 'the', 'this', 'that', 'these', 'those', 'some', 'any', 'all', 'each',
+    # Pronouns
+    'i', 'we', 'you', 'he', 'she', 'it', 'they', 'me', 'us', 'him', 'her', 'them',
+    'my', 'our', 'your', 'his', 'its', 'their', 'mine', 'ours', 'yours', 'hers', 'theirs',
+    'who', 'whom', 'whose', 'which', 'what', 'whoever', 'whatever',
+    # Prepositions
+    'in', 'on', 'at', 'by', 'for', 'with', 'about', 'against', 'between', 'into',
+    'through', 'during', 'before', 'after', 'above', 'below', 'to', 'from', 'up', 'down',
+    'out', 'off', 'over', 'under', 'again', 'further', 'then', 'once', 'of',
+    # Conjunctions
+    'and', 'but', 'or', 'nor', 'so', 'yet', 'both', 'either', 'neither', 'not', 'only',
+    'as', 'if', 'when', 'where', 'while', 'although', 'because', 'unless', 'until',
+    # Common verbs
+    'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'having',
+    'do', 'does', 'did', 'doing', 'will', 'would', 'could', 'should', 'may', 'might',
+    'must', 'shall', 'can', 'need', 'dare', 'ought', 'used', 'get', 'got', 'getting',
+    # Common adverbs
+    'very', 'really', 'just', 'also', 'still', 'already', 'always', 'never', 'ever',
+    'often', 'sometimes', 'usually', 'perhaps', 'maybe', 'probably', 'certainly',
+    'here', 'there', 'now', 'today', 'tomorrow', 'yesterday', 'soon', 'later',
+    'how', 'why', 'well', 'however', 'therefore', 'thus', 'hence', 'moreover',
+    # Common adjectives
+    'other', 'another', 'such', 'own', 'same', 'different', 'new', 'old', 'good', 'bad',
+    'first', 'last', 'next', 'few', 'many', 'much', 'more', 'most', 'less', 'least',
+    'no', 'yes', 'true', 'false',
+    # Numbers & quantifiers
+    'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten',
+    'several', 'various', 'certain', 'every',
+    # Generic scientific terms (too common to be meaningful)
+    'study', 'studies', 'research', 'result', 'results', 'method', 'methods',
+    'data', 'analysis', 'effect', 'effects', 'level', 'levels', 'group', 'groups',
+    'using', 'based', 'show', 'shows', 'shown', 'found', 'suggest', 'suggests',
+    'indicate', 'indicates', 'observed', 'reported', 'compared', 'associated',
+    'significant', 'significantly', 'increase', 'decrease', 'higher', 'lower',
+    # Units and measurements (too generic)
+    'cm', 'mm', 'kg', 'mg', 'ml', 'percent', 'percentage',
+    # Other common words
+    'use', 'case', 'cases', 'time', 'times', 'way', 'ways', 'work', 'works',
+    'part', 'parts', 'place', 'number', 'point', 'points', 'fact', 'thing', 'things',
+    'example', 'examples', 'type', 'types', 'form', 'forms', 'system', 'systems',
+    'order', 'general', 'particular', 'specific', 'include', 'including', 'included',
+})
+
 
 class Domain(Enum):
     """The seven domains of expertise"""
@@ -621,11 +667,16 @@ class CipherBrain:
         """
         patterns = []
 
-        # Group claims by entity
+        # Group claims by entity (filtering stopwords and short entities)
         entity_claims: Dict[str, List[Tuple[int, Claim]]] = {}
         for claim_id, claim in claims:
             for entity in claim.entities:
-                entity_lower = entity.lower()
+                entity_lower = entity.lower().strip()
+                # Skip stopwords, short entities, and purely numeric entities
+                if (entity_lower in STOPWORDS or
+                    len(entity_lower) < 3 or
+                    entity_lower.isdigit()):
+                    continue
                 if entity_lower not in entity_claims:
                     entity_claims[entity_lower] = []
                 entity_claims[entity_lower].append((claim_id, claim))
@@ -634,6 +685,12 @@ class CipherBrain:
         for entity, entity_claim_list in entity_claims.items():
             if len(entity_claim_list) < 3:
                 continue
+
+            # Additional check: skip if entity looks like a stopword phrase
+            if any(word in STOPWORDS for word in entity.split() if len(word) > 2):
+                # Only skip if ALL words are stopwords
+                if all(word in STOPWORDS for word in entity.split()):
+                    continue
 
             # Check if claims agree
             findings = [c for _, c in entity_claim_list if c.claim_type == 'finding']

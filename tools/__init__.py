@@ -4,7 +4,7 @@ Core cognitive components for cross-domain learning and synthesis.
 """
 
 from .hash_learning import HashLearning, compute_entropy, compute_hash, compute_quality
-from .cipher_brain import CipherBrain, Domain, Claim, Connection, Pattern
+from .cipher_brain import CipherBrain, Domain, Claim, Connection, Pattern, STOPWORDS
 from .domain_learner import DomainLearner, DomainStrategy, DOMAIN_STRATEGIES
 from .pattern_detector import PatternDetector, CrossDomainInsight
 from .embeddings import (
@@ -85,6 +85,7 @@ __all__ = [
     'Claim',
     'Connection',
     'Pattern',
+    'STOPWORDS',
 
     # Domain Learning
     'DomainLearner',

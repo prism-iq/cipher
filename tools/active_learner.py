@@ -160,21 +160,15 @@ class ActiveLearner:
                 d.id,
                 d.name,
                 COUNT(c.id) as claim_count,
-                AVG(COALESCE(c.current_confidence, c.confidence)) as avg_conf,
-                VARIANCE(COALESCE(c.current_confidence, c.confidence)) as var_conf,
+                AVG(c.confidence) as avg_conf,
+                VARIANCE(c.confidence) as var_conf,
                 (
                     SELECT COUNT(*) FROM synthesis.contradictions ct
                     JOIN synthesis.claims c1 ON ct.claim_a_id = c1.id
                     WHERE d.id = ANY(c1.domains)
                     AND ct.resolution_status = 'unresolved'
                 ) as contradiction_count,
-                (
-                    SELECT COUNT(*) FILTER (WHERE c2.replication_status = 'unreplicated'
-                        OR c2.replication_status IS NULL)::float /
-                        NULLIF(COUNT(*), 0)
-                    FROM synthesis.claims c2
-                    WHERE d.id = ANY(c2.domains)
-                ) as unreplicated_ratio,
+                0.5 as unreplicated_ratio,
                 (
                     SELECT EXTRACT(days FROM NOW() - MAX(ll.created_at))
                     FROM synthesis.learning_log ll
@@ -198,8 +192,8 @@ class ActiveLearner:
             uncertainty = 1.0 - (row['avg_conf'] or 0.5)
             variance_score = min(1.0, (row['var_conf'] or 0) * 4)  # Scale variance
             contradiction_score = min(1.0, (row['contradiction_count'] or 0) / 10)
-            staleness_score = min(1.0, (row['staleness'] or 0) / 30)
-            unreplicated_score = row['unreplicated_ratio'] or 0.5
+            staleness_score = min(1.0, float(row['staleness'] or 0) / 30)
+            unreplicated_score = float(row['unreplicated_ratio'] or 0.5)
 
             priority = (
                 self.WEIGHTS['uncertainty'] * uncertainty +
@@ -241,7 +235,6 @@ class ActiveLearner:
             SELECT
                 ct.id,
                 ct.contradiction_type,
-                ct.severity,
                 c1.claim_text as claim_a,
                 c2.claim_text as claim_b,
                 c1.domains as domains_a,
@@ -254,7 +247,7 @@ class ActiveLearner:
             LEFT JOIN synthesis.sources s1 ON c1.source_id = s1.id
             LEFT JOIN synthesis.sources s2 ON c2.source_id = s2.id
             WHERE ct.resolution_status = 'unresolved'
-            ORDER BY ct.severity DESC
+            ORDER BY ct.created_at DESC
             LIMIT $1
         """, limit)
 
@@ -412,16 +405,18 @@ class ActiveLearner:
         # Find entities that appear in low-confidence claims
         rows = await self._conn.fetch("""
             SELECT
-                e.key as entity,
+                entity,
                 COUNT(*) as claim_count,
-                AVG(COALESCE(c.current_confidence, c.confidence)) as avg_confidence,
-                ARRAY_AGG(DISTINCT unnest) as domains
+                AVG(c.confidence) as avg_confidence,
+                ARRAY_AGG(DISTINCT d) as domains
             FROM synthesis.claims c,
-                 jsonb_each_text(c.entities) e,
-                 unnest(c.domains)
-            WHERE COALESCE(c.current_confidence, c.confidence) < $1
-            GROUP BY e.key
-            HAVING COUNT(*) >= 2
+                 jsonb_array_elements_text(c.entities) as entity,
+                 unnest(c.domains) as d
+            WHERE c.confidence < $1
+            AND c.entities IS NOT NULL
+            AND jsonb_typeof(c.entities) = 'array'
+            GROUP BY entity
+            HAVING COUNT(*) >= 2 AND length(entity) > 3
             ORDER BY avg_confidence ASC, COUNT(*) DESC
             LIMIT $2
         """, threshold, limit)

@@ -141,11 +141,21 @@ After deep analysis of the CIPHER codebase, several cross-domain opportunities e
 - **Cross-domain bridge**: Math (optimization, UCB bounds) ↔ Neuro (attention allocation) ↔ Psychology (curiosity-driven learning)
 - **Status**: Ready to use
 
-#### 5. **Graph-Native Structure**
-- PostgreSQL stores graph-like data (claims, connections) but queries are SQL-based
-- Pattern detection does in-memory graph traversal
-- **Opportunity**: Hybrid approach with Neo4j or PostgreSQL's recursive CTEs
-- **Cross-domain bridge**: Math (graph theory) ↔ Neuro (connectomics) ↔ Biology (networks)
+#### 5. **Graph-Native Structure** ✅ IMPLEMENTED
+- ~~PostgreSQL stores graph-like data (claims, connections) but queries are SQL-based~~
+- **DONE**: Added comprehensive graph engine with:
+  - PostgreSQL recursive CTEs for efficient path finding in database
+  - In-memory graph representation with adjacency lists
+  - Path finding algorithms (BFS shortest, Dijkstra strongest, cross-domain optimized)
+  - Centrality measures (PageRank, betweenness, degree, clustering coefficient)
+  - Community detection (Louvain-like modularity optimization)
+  - Cross-domain bridge and hub analysis
+- **Implementation**:
+  - `tools/graph_engine.py` - GraphEngine class with all algorithms
+  - PostgreSQL recursive CTEs for scalable path queries
+  - `cli.py` - New commands: `graph-stats`, `find-path`, `all-paths`, `centrality`, `communities`, `graph-bridges`, `graph-hubs`
+- **Cross-domain bridge**: Math (graph theory, algorithms) ↔ Neuro (connectomics) ↔ Biology (protein networks)
+- **Status**: Ready to use
 
 #### 6. **LLM Integration Point**
 - `discovered_by VARCHAR(50)` includes 'llm' option but not implemented

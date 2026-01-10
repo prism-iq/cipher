@@ -46,6 +46,16 @@ from .active_learner import (
     DomainUncertainty,
     ActiveLearningPlan
 )
+from .graph_engine import (
+    GraphEngine,
+    get_graph_engine,
+    GraphNode,
+    GraphEdge,
+    GraphPath,
+    Community,
+    GraphStats,
+    ConnectionType
+)
 
 __all__ = [
     # Hash Learning
@@ -108,4 +118,14 @@ __all__ = [
     'LearningTarget',
     'DomainUncertainty',
     'ActiveLearningPlan',
+
+    # Graph Engine
+    'GraphEngine',
+    'get_graph_engine',
+    'GraphNode',
+    'GraphEdge',
+    'GraphPath',
+    'Community',
+    'GraphStats',
+    'ConnectionType',
 ]

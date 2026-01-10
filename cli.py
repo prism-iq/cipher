@@ -935,6 +935,267 @@ async def active_learn(strategy: str = 'ucb', max_papers: int = 50):
         await learner.close()
 
 
+# =========================================================================
+# GRAPH ENGINE COMMANDS
+# =========================================================================
+
+async def graph_stats():
+    """Show knowledge graph statistics."""
+    from tools.graph_engine import GraphEngine
+
+    print("Knowledge Graph Statistics")
+    print("=" * 60)
+
+    engine = GraphEngine(config.db.connection_string)
+    await engine.connect()
+
+    try:
+        await engine.load_graph()
+        stats = engine.compute_graph_stats()
+
+        print(f"\nNodes (claims):          {stats.node_count:,}")
+        print(f"Edges (connections):     {stats.edge_count:,}")
+        print(f"Graph density:           {stats.density:.6f}")
+        print(f"Average degree:          {stats.avg_degree:.2f}")
+        print(f"Average clustering:      {stats.avg_clustering:.4f}")
+        print(f"Number of communities:   {stats.num_communities}")
+        print(f"Largest community:       {stats.largest_community_size} nodes")
+        print(f"Cross-domain edge ratio: {stats.cross_domain_edge_ratio:.2%}")
+
+    finally:
+        await engine.close()
+
+
+async def find_path(source_id: int, target_id: int, path_type: str = 'shortest'):
+    """Find path between two claims."""
+    from tools.graph_engine import GraphEngine
+
+    print(f"Finding {path_type} path from claim {source_id} to {target_id}")
+    print("=" * 60)
+
+    engine = GraphEngine(config.db.connection_string)
+    await engine.connect()
+
+    try:
+        if path_type == 'cte':
+            # Use database CTE
+            path = await engine.find_path_cte(source_id, target_id)
+        else:
+            # Use in-memory algorithms
+            await engine.load_graph()
+            if path_type == 'shortest':
+                path = engine.find_shortest_path(source_id, target_id)
+            elif path_type == 'strongest':
+                path = engine.find_strongest_path(source_id, target_id)
+            elif path_type == 'cross_domain':
+                path = engine.find_cross_domain_path(source_id, target_id)
+            else:
+                path = engine.find_shortest_path(source_id, target_id)
+
+        if not path:
+            print(f"\nNo path found between claims {source_id} and {target_id}")
+            return
+
+        print(f"\nPath found ({len(path.nodes)} nodes):")
+        print(f"Type: {path.path_type}")
+        print(f"Total weight: {path.total_weight:.3f}")
+        print(f"Domains traversed: {path.domains_traversed}")
+        print(f"\nPath: {' -> '.join(str(n) for n in path.nodes)}")
+
+        # Get claim texts
+        import asyncpg
+        conn = await asyncpg.connect(config.db.connection_string)
+        try:
+            print("\nClaims in path:")
+            for i, node_id in enumerate(path.nodes):
+                row = await conn.fetchrow(
+                    "SELECT claim_text FROM synthesis.claims WHERE id = $1",
+                    node_id
+                )
+                if row:
+                    print(f"  {i+1}. [{node_id}] {row['claim_text'][:80]}...")
+        finally:
+            await conn.close()
+
+    finally:
+        await engine.close()
+
+
+async def centrality(metric: str = 'pagerank', limit: int = 20):
+    """Show top claims by centrality metric."""
+    from tools.graph_engine import GraphEngine
+
+    print(f"Top Claims by {metric.title()} Centrality")
+    print("=" * 60)
+
+    engine = GraphEngine(config.db.connection_string)
+    await engine.connect()
+
+    try:
+        await engine.load_graph()
+        top_nodes = engine.get_top_nodes_by_centrality(metric, limit)
+
+        if not top_nodes:
+            print("\nNo nodes found in graph.")
+            return
+
+        print(f"\n{'Rank':<6} {'ID':<8} {'Score':<12} {'Claim'}")
+        print("-" * 60)
+
+        for i, (node_id, score, text) in enumerate(top_nodes, 1):
+            print(f"{i:<6} {node_id:<8} {score:<12.6f} {text[:40]}...")
+
+    finally:
+        await engine.close()
+
+
+async def communities(limit: int = 20):
+    """Detect and show knowledge communities."""
+    from tools.graph_engine import GraphEngine
+    from tools.cipher_brain import Domain
+
+    print("Knowledge Graph Communities")
+    print("=" * 60)
+
+    engine = GraphEngine(config.db.connection_string)
+    await engine.connect()
+
+    try:
+        await engine.load_graph()
+        comms = engine.detect_communities()
+
+        if not comms:
+            print("\nNo communities detected.")
+            return
+
+        print(f"\nFound {len(comms)} communities:\n")
+
+        domain_names = {d.value: d.name for d in Domain}
+
+        for i, comm in enumerate(comms[:limit], 1):
+            domain_str = ", ".join(
+                domain_names.get(d, str(d))
+                for d in comm.dominant_domains[:2]
+            ) or "mixed"
+
+            print(f"{i}. Community {comm.id}")
+            print(f"   Size: {comm.size} nodes")
+            print(f"   Density: {comm.density:.4f}")
+            print(f"   Coherence: {comm.coherence:.3f}")
+            print(f"   Dominant domains: {domain_str}")
+            print(f"   Bridge nodes: {len(comm.bridge_nodes)}")
+            print()
+
+    finally:
+        await engine.close()
+
+
+async def domain_bridges(domain_a: str, domain_b: str, limit: int = 10):
+    """Find paths bridging two domains."""
+    from tools.graph_engine import GraphEngine
+    from tools.cipher_brain import Domain
+
+    domain_map = {
+        'math': Domain.MATHEMATICS,
+        'neuro': Domain.NEUROSCIENCES,
+        'bio': Domain.BIOLOGY,
+        'psych': Domain.PSYCHOLOGY,
+        'med': Domain.MEDICINE,
+        'art': Domain.ART,
+    }
+
+    if domain_a.lower() not in domain_map or domain_b.lower() not in domain_map:
+        print(f"Unknown domain. Available: {list(domain_map.keys())}")
+        return
+
+    da = domain_map[domain_a.lower()]
+    db = domain_map[domain_b.lower()]
+
+    print(f"Finding paths between {da.name} and {db.name}")
+    print("=" * 60)
+
+    engine = GraphEngine(config.db.connection_string)
+    await engine.connect()
+
+    try:
+        paths = await engine.find_domain_bridges(da.value, db.value)
+
+        if not paths:
+            print(f"\nNo paths found bridging {da.name} and {db.name}")
+            return
+
+        print(f"\nFound {len(paths)} bridging paths:\n")
+
+        for i, path in enumerate(paths[:limit], 1):
+            print(f"{i}. Path ({len(path.nodes)} nodes)")
+            print(f"   Weight: {path.total_weight:.3f}")
+            print(f"   Nodes: {' -> '.join(str(n) for n in path.nodes)}")
+            print()
+
+    finally:
+        await engine.close()
+
+
+async def cross_domain_hubs(min_domains: int = 2, limit: int = 20):
+    """Find claims that connect multiple domains."""
+    from tools.graph_engine import GraphEngine
+    from tools.cipher_brain import Domain
+
+    print(f"Cross-Domain Hub Claims (min {min_domains} domains)")
+    print("=" * 60)
+
+    engine = GraphEngine(config.db.connection_string)
+    await engine.connect()
+
+    try:
+        hubs = await engine.get_cross_domain_hubs(min_domains)
+
+        if not hubs:
+            print(f"\nNo claims found spanning {min_domains}+ domains.")
+            return
+
+        domain_names = {d.value: d.name for d in Domain}
+
+        print(f"\n{'ID':<8} {'Domains':<8} {'Domain Names'}")
+        print("-" * 60)
+
+        for claim_id, domain_count, domains in hubs[:limit]:
+            domain_str = ", ".join(domain_names.get(d, str(d)) for d in domains)
+            print(f"{claim_id:<8} {domain_count:<8} {domain_str}")
+
+    finally:
+        await engine.close()
+
+
+async def all_paths(source_id: int, target_id: int, max_depth: int = 5, limit: int = 10):
+    """Find all paths between two claims."""
+    from tools.graph_engine import GraphEngine
+
+    print(f"Finding all paths from claim {source_id} to {target_id}")
+    print(f"Max depth: {max_depth}")
+    print("=" * 60)
+
+    engine = GraphEngine(config.db.connection_string)
+    await engine.connect()
+
+    try:
+        paths = await engine.find_all_paths_cte(source_id, target_id, max_depth, limit)
+
+        if not paths:
+            print(f"\nNo paths found between claims {source_id} and {target_id}")
+            return
+
+        print(f"\nFound {len(paths)} paths:\n")
+
+        for i, path in enumerate(paths, 1):
+            cross = " (cross-domain)" if path.path_type == 'cross_domain' else ""
+            print(f"{i}. {len(path.nodes)} hops, weight={path.total_weight:.3f}{cross}")
+            print(f"   {' -> '.join(str(n) for n in path.nodes)}")
+
+    finally:
+        await engine.close()
+
+
 def main():
     parser = argparse.ArgumentParser(
         description='CIPHER Command Line Interface',
@@ -971,6 +1232,15 @@ Active Learning Commands:
   python cli.py gaps
   python cli.py low-confidence --threshold 0.3
   python cli.py active-learn --strategy ucb --max-papers 50
+
+Graph Engine Commands:
+  python cli.py graph-stats
+  python cli.py find-path 42 100 --type shortest
+  python cli.py all-paths 42 100 --max-depth 5
+  python cli.py centrality --metric pagerank
+  python cli.py communities
+  python cli.py graph-bridges math neuro
+  python cli.py graph-hubs --min-domains 3
         """
     )
 
@@ -1098,6 +1368,50 @@ Active Learning Commands:
                        help='Learning strategy')
     active.add_argument('--max-papers', type=int, default=50, help='Max papers per target')
 
+    # =========================================================================
+    # GRAPH ENGINE COMMANDS
+    # =========================================================================
+
+    # Graph Stats
+    subparsers.add_parser('graph-stats', help='Show knowledge graph statistics')
+
+    # Find Path
+    path_parser = subparsers.add_parser('find-path', help='Find path between two claims')
+    path_parser.add_argument('source', type=int, help='Source claim ID')
+    path_parser.add_argument('target', type=int, help='Target claim ID')
+    path_parser.add_argument('--type', type=str, default='shortest',
+                            choices=['shortest', 'strongest', 'cross_domain', 'cte'],
+                            help='Path type')
+
+    # All Paths
+    all_paths_parser = subparsers.add_parser('all-paths', help='Find all paths between two claims')
+    all_paths_parser.add_argument('source', type=int, help='Source claim ID')
+    all_paths_parser.add_argument('target', type=int, help='Target claim ID')
+    all_paths_parser.add_argument('--max-depth', type=int, default=5, help='Maximum path depth')
+    all_paths_parser.add_argument('-n', type=int, default=10, help='Max paths to return')
+
+    # Centrality
+    cent_parser = subparsers.add_parser('centrality', help='Show top claims by centrality')
+    cent_parser.add_argument('--metric', type=str, default='pagerank',
+                            choices=['pagerank', 'betweenness', 'degree', 'clustering'],
+                            help='Centrality metric')
+    cent_parser.add_argument('-n', type=int, default=20, help='Max results')
+
+    # Communities
+    comm_parser = subparsers.add_parser('communities', help='Detect knowledge communities')
+    comm_parser.add_argument('-n', type=int, default=20, help='Max communities to show')
+
+    # Graph Bridges
+    bridges_parser = subparsers.add_parser('graph-bridges', help='Find paths bridging two domains')
+    bridges_parser.add_argument('domain_a', type=str, help='First domain (math/neuro/bio/psych/med/art)')
+    bridges_parser.add_argument('domain_b', type=str, help='Second domain')
+    bridges_parser.add_argument('-n', type=int, default=10, help='Max paths to show')
+
+    # Graph Hubs
+    hubs_parser = subparsers.add_parser('graph-hubs', help='Find cross-domain hub claims')
+    hubs_parser.add_argument('--min-domains', type=int, default=2, help='Minimum domains spanned')
+    hubs_parser.add_argument('-n', type=int, default=20, help='Max results')
+
     args = parser.parse_args()
 
     if args.command == 'status':
@@ -1158,6 +1472,21 @@ Active Learning Commands:
         asyncio.run(low_confidence_concepts(args.threshold, args.n))
     elif args.command == 'active-learn':
         asyncio.run(active_learn(args.strategy, args.max_papers))
+    # Graph Engine Commands
+    elif args.command == 'graph-stats':
+        asyncio.run(graph_stats())
+    elif args.command == 'find-path':
+        asyncio.run(find_path(args.source, args.target, args.type))
+    elif args.command == 'all-paths':
+        asyncio.run(all_paths(args.source, args.target, args.max_depth, args.n))
+    elif args.command == 'centrality':
+        asyncio.run(centrality(args.metric, args.n))
+    elif args.command == 'communities':
+        asyncio.run(communities(args.n))
+    elif args.command == 'graph-bridges':
+        asyncio.run(domain_bridges(args.domain_a, args.domain_b, args.n))
+    elif args.command == 'graph-hubs':
+        asyncio.run(cross_domain_hubs(args.min_domains, args.n))
     else:
         parser.print_help()
 

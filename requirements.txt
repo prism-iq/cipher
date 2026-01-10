@@ -1,0 +1,26 @@
+# CIPHER Dependencies
+# All open-source, no proprietary dependencies
+
+# Async
+asyncio-compat>=0.1.0
+aiohttp>=3.9.0
+
+# Database
+asyncpg>=0.29.0
+psycopg2-binary>=2.9.9
+
+# Configuration
+python-dotenv>=1.0.0
+
+# Vector embeddings (for semantic search)
+sentence-transformers>=2.2.0
+numpy>=1.24.0
+
+# Optional: Better XML parsing for arXiv
+# lxml>=5.0.0
+
+# Development
+# pytest>=7.4.0
+# pytest-asyncio>=0.21.0
+# black>=23.0.0
+# mypy>=1.7.0

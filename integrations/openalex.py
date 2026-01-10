@@ -152,7 +152,7 @@ class OpenAlexClient(AcademicSource):
         from_date: Optional[str] = None,
         to_date: Optional[str] = None,
         is_oa: Optional[bool] = None,
-        sort: str = "relevance_score"
+        sort: str = "relevance_score:desc"
     ) -> List[Paper]:
         """
         Search OpenAlex works.
@@ -165,7 +165,7 @@ class OpenAlexClient(AcademicSource):
             from_date: Filter by publication date (YYYY-MM-DD)
             to_date: Filter by publication date (YYYY-MM-DD)
             is_oa: Filter to open access only
-            sort: Sort order (relevance_score, cited_by_count, publication_date)
+            sort: Sort order (relevance_score:desc, cited_by_count:desc, publication_date:desc)
 
         Returns:
             List of Paper objects

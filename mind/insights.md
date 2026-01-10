@@ -110,14 +110,21 @@ After deep analysis of the CIPHER codebase, several cross-domain opportunities e
 - **Cross-domain bridge**: Math (formal grammars) ↔ Neuro (language processing) ↔ Psychology (semantics)
 - **Status**: Ready to use
 
-#### 3. **Temporal Dynamics Missing**
-- System captures snapshots but not evolution of knowledge
-- Claims may be superseded, replicated, or refuted over time
-- **Opportunity**: Add temporal tracking:
-  - Claim confidence decay/growth
-  - Replication tracking
-  - Paradigm shift detection
-- **Cross-domain bridge**: Math (dynamical systems) ↔ Biology (evolution) ↔ Psychology (belief updating)
+#### 3. **Temporal Dynamics Missing** ✅ IMPLEMENTED
+- ~~System captures snapshots but not evolution of knowledge~~
+- **DONE**: Added temporal tracking with:
+  - Confidence decay using half-life model (default 3 years)
+  - Replication status tracking (unreplicated, replicated, partially_replicated, failed_replication, contested)
+  - Claim lifecycle management (active, superseded, retracted, deprecated, merged)
+  - Citation tracking with velocity metrics
+  - Paradigm shift detection algorithm
+- **Implementation**:
+  - `tools/temporal_tracker.py` - TemporalTracker with decay calculations, replication recording, paradigm detection
+  - `cipher_brain.py` - Extended Claim dataclass with temporal fields
+  - `sql/migrations/002_temporal_tracking.sql` - New columns, evidence_events table, temporal_patterns table
+  - `cli.py` - New commands: `temporal-stats`, `decay-claims`, `aging-claims`, `claim-temporal`, `paradigm-shifts`, `record-replication`
+- **Cross-domain bridge**: Math (dynamical systems, exponential decay) ↔ Biology (evolution) ↔ Psychology (belief updating)
+- **Status**: Ready to use
 
 #### 4. **Active Learning Loop**
 - Current learning is passive (fetch → extract → store)

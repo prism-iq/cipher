@@ -402,6 +402,231 @@ async def embedding_stats():
         print(f"Error: {e}")
 
 
+# =========================================================================
+# TEMPORAL TRACKING COMMANDS
+# =========================================================================
+
+async def temporal_stats():
+    """Show temporal tracking statistics."""
+    import asyncpg
+
+    print("CIPHER Temporal Tracking Statistics")
+    print("=" * 50)
+
+    try:
+        conn = await asyncpg.connect(config.db.connection_string)
+
+        # Replication status distribution
+        print("\nReplication Status Distribution:")
+        rows = await conn.fetch("""
+            SELECT
+                COALESCE(replication_status, 'unreplicated') as status,
+                COUNT(*) as count
+            FROM synthesis.claims
+            GROUP BY replication_status
+            ORDER BY count DESC
+        """)
+        for row in rows:
+            print(f"  {row['status']:20} {row['count']:,}")
+
+        # Claim status distribution
+        print("\nClaim Lifecycle Status:")
+        rows = await conn.fetch("""
+            SELECT
+                COALESCE(status, 'active') as status,
+                COUNT(*) as count
+            FROM synthesis.claims
+            GROUP BY status
+            ORDER BY count DESC
+        """)
+        for row in rows:
+            print(f"  {row['status']:20} {row['count']:,}")
+
+        # Age distribution
+        print("\nClaim Age Distribution:")
+        rows = await conn.fetch("""
+            SELECT
+                CASE
+                    WHEN EXTRACT(days FROM NOW() - created_at) < 30 THEN '< 1 month'
+                    WHEN EXTRACT(days FROM NOW() - created_at) < 180 THEN '1-6 months'
+                    WHEN EXTRACT(days FROM NOW() - created_at) < 365 THEN '6-12 months'
+                    WHEN EXTRACT(days FROM NOW() - created_at) < 730 THEN '1-2 years'
+                    ELSE '> 2 years'
+                END as age_group,
+                COUNT(*) as count,
+                AVG(COALESCE(current_confidence, confidence)) as avg_confidence
+            FROM synthesis.claims
+            GROUP BY age_group
+            ORDER BY count DESC
+        """)
+        for row in rows:
+            conf = row['avg_confidence'] or 0
+            print(f"  {row['age_group']:15} {row['count']:,} claims (avg conf: {conf:.2f})")
+
+        await conn.close()
+
+    except Exception as e:
+        print(f"Error: {e}")
+
+
+async def decay_claims():
+    """Apply confidence decay to all claims."""
+    from tools.temporal_tracker import TemporalTracker
+
+    print("Applying confidence decay to claims...")
+    print("=" * 50)
+
+    tracker = TemporalTracker(config.db.connection_string)
+    await tracker.connect()
+
+    try:
+        updated = await tracker.decay_all_claims()
+        print(f"\nUpdated {updated} claims with decayed confidence.")
+
+    finally:
+        await tracker.close()
+
+
+async def aging_claims(min_age: int = 180, max_conf: float = 0.5):
+    """Show aging claims that need attention."""
+    from tools.temporal_tracker import TemporalTracker
+
+    print(f"Claims older than {min_age} days with confidence < {max_conf}")
+    print("=" * 60)
+
+    tracker = TemporalTracker(config.db.connection_string)
+    await tracker.connect()
+
+    try:
+        claims = await tracker.get_aging_claims(min_age, max_conf)
+
+        if not claims:
+            print("\nNo aging claims found matching criteria.")
+            return
+
+        print(f"\nFound {len(claims)} aging claims:\n")
+        for claim in claims[:20]:
+            age = int(claim.get('age_days', 0))
+            orig_conf = claim.get('original_confidence', 0) or 0
+            curr_conf = claim.get('current_confidence', 0) or 0
+            repl = claim.get('replication_status', 'unreplicated')
+
+            print(f"ID {claim['id']} | Age: {age}d | Conf: {orig_conf:.2f} -> {curr_conf:.2f} | Repl: {repl}")
+            print(f"  {claim['claim_text'][:70]}...")
+            print()
+
+    finally:
+        await tracker.close()
+
+
+async def claim_temporal(claim_id: int):
+    """Show temporal state of a specific claim."""
+    from tools.temporal_tracker import TemporalTracker
+
+    print(f"Temporal State for Claim ID: {claim_id}")
+    print("=" * 50)
+
+    tracker = TemporalTracker(config.db.connection_string)
+    await tracker.connect()
+
+    try:
+        state = await tracker.get_temporal_state(claim_id)
+
+        if not state:
+            print(f"\nClaim {claim_id} not found.")
+            return
+
+        print(f"\nClaim ID:            {state.claim_id}")
+        print(f"Status:              {state.status.value}")
+        print(f"Age:                 {state.age_days} days")
+        print(f"Half-life:           {state.half_life_days:.0f} days")
+        print(f"\nConfidence:")
+        print(f"  Original:          {state.original_confidence:.3f}")
+        print(f"  Current:           {state.current_confidence:.3f}")
+        print(f"  Trend:             {state.confidence_trend:+.3f}")
+        print(f"\nReplication:")
+        print(f"  Status:            {state.replication_status.value}")
+        print(f"  Successful:        {state.replication_count}")
+        print(f"  Failed:            {state.failed_replication_count}")
+        print(f"\nCitations:")
+        print(f"  Total:             {state.citation_count}")
+        print(f"  Velocity:          {state.citation_velocity:.1f}/month")
+        print(f"\nTimestamps:")
+        print(f"  First seen:        {state.first_seen}")
+        print(f"  Last confirmed:    {state.last_confirmed or 'Never'}")
+        print(f"  Last cited:        {state.last_cited or 'Never'}")
+
+        if state.superseded_by:
+            print(f"\nSuperseded by:       Claim ID {state.superseded_by}")
+
+    finally:
+        await tracker.close()
+
+
+async def detect_paradigm_shifts(days: int = 365):
+    """Detect potential paradigm shifts."""
+    from tools.temporal_tracker import TemporalTracker
+
+    print(f"Detecting paradigm shifts (last {days} days)")
+    print("=" * 50)
+
+    tracker = TemporalTracker(config.db.connection_string)
+    await tracker.connect()
+
+    try:
+        patterns = await tracker.detect_paradigm_shifts(days)
+
+        if not patterns:
+            print("\nNo paradigm shifts detected.")
+            return
+
+        print(f"\nFound {len(patterns)} temporal patterns:\n")
+        for i, pattern in enumerate(patterns, 1):
+            print(f"{i}. [{pattern.pattern_type}] (conf: {pattern.confidence:.2f})")
+            print(f"   {pattern.description}")
+            print(f"   Claims involved: {len(pattern.claims_involved)}")
+            print(f"   Started: {pattern.start_date}")
+            print()
+
+    finally:
+        await tracker.close()
+
+
+async def record_replication(claim_id: int, success: bool, partial: bool = False):
+    """Record a replication attempt for a claim."""
+    from tools.temporal_tracker import TemporalTracker
+
+    status = "successful" if success else "failed"
+    if partial:
+        status = "partial"
+
+    print(f"Recording {status} replication for Claim ID: {claim_id}")
+    print("=" * 50)
+
+    tracker = TemporalTracker(config.db.connection_string)
+    await tracker.connect()
+
+    try:
+        result = await tracker.record_replication(
+            claim_id=claim_id,
+            success=success,
+            partial=partial
+        )
+
+        if result:
+            print(f"\nReplication recorded successfully.")
+            # Show updated state
+            state = await tracker.get_temporal_state(claim_id)
+            if state:
+                print(f"New replication status: {state.replication_status.value}")
+                print(f"New confidence: {state.current_confidence:.3f}")
+        else:
+            print("\nFailed to record replication.")
+
+    finally:
+        await tracker.close()
+
+
 def main():
     parser = argparse.ArgumentParser(
         description='CIPHER Command Line Interface',
@@ -421,6 +646,14 @@ Semantic Embedding Commands:
   python cli.py embed-stats
   python cli.py find-bridges --threshold 0.7
   python cli.py similar 42 --cross-domain
+
+Temporal Tracking Commands:
+  python cli.py temporal-stats
+  python cli.py decay-claims
+  python cli.py aging-claims --min-age 365 --max-conf 0.4
+  python cli.py claim-temporal 42
+  python cli.py paradigm-shifts --days 730
+  python cli.py record-replication 42 --success
         """
     )
 
@@ -478,6 +711,36 @@ Semantic Embedding Commands:
     similar.add_argument('-n', type=int, default=10, help='Max results')
     similar.add_argument('--cross-domain', action='store_true', help='Only show cross-domain matches')
 
+    # =========================================================================
+    # TEMPORAL TRACKING COMMANDS
+    # =========================================================================
+
+    # Temporal Stats
+    subparsers.add_parser('temporal-stats', help='Show temporal tracking statistics')
+
+    # Decay Claims
+    subparsers.add_parser('decay-claims', help='Apply confidence decay to all claims')
+
+    # Aging Claims
+    aging = subparsers.add_parser('aging-claims', help='Show aging claims needing attention')
+    aging.add_argument('--min-age', type=int, default=180, help='Minimum age in days')
+    aging.add_argument('--max-conf', type=float, default=0.5, help='Maximum confidence threshold')
+
+    # Claim Temporal State
+    claim_temp = subparsers.add_parser('claim-temporal', help='Show temporal state of a claim')
+    claim_temp.add_argument('claim_id', type=int, help='Claim ID')
+
+    # Paradigm Shifts
+    paradigm = subparsers.add_parser('paradigm-shifts', help='Detect paradigm shifts')
+    paradigm.add_argument('--days', type=int, default=365, help='Look back period in days')
+
+    # Record Replication
+    repl = subparsers.add_parser('record-replication', help='Record replication attempt')
+    repl.add_argument('claim_id', type=int, help='Claim ID')
+    repl.add_argument('--success', action='store_true', help='Replication succeeded')
+    repl.add_argument('--failure', action='store_true', help='Replication failed')
+    repl.add_argument('--partial', action='store_true', help='Partial replication')
+
     args = parser.parse_args()
 
     if args.command == 'status':
@@ -503,6 +766,26 @@ Semantic Embedding Commands:
         asyncio.run(find_bridges(args.threshold, args.n))
     elif args.command == 'similar':
         asyncio.run(find_similar(args.claim_id, args.n, args.cross_domain))
+    # Temporal Tracking Commands
+    elif args.command == 'temporal-stats':
+        asyncio.run(temporal_stats())
+    elif args.command == 'decay-claims':
+        asyncio.run(decay_claims())
+    elif args.command == 'aging-claims':
+        asyncio.run(aging_claims(args.min_age, args.max_conf))
+    elif args.command == 'claim-temporal':
+        asyncio.run(claim_temporal(args.claim_id))
+    elif args.command == 'paradigm-shifts':
+        asyncio.run(detect_paradigm_shifts(args.days))
+    elif args.command == 'record-replication':
+        if args.partial:
+            asyncio.run(record_replication(args.claim_id, success=True, partial=True))
+        elif args.success:
+            asyncio.run(record_replication(args.claim_id, success=True, partial=False))
+        elif args.failure:
+            asyncio.run(record_replication(args.claim_id, success=False, partial=False))
+        else:
+            print("Error: Must specify --success, --failure, or --partial")
     else:
         parser.print_help()
 

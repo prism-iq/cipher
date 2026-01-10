@@ -68,6 +68,13 @@ class Claim:
     causal_relations: List[Dict[str, Any]] = field(default_factory=list)  # Extracted causal relations
     hedging_markers: List[str] = field(default_factory=list)  # Uncertainty indicators
     negation: bool = False  # Whether claim is negated
+    # Temporal tracking fields
+    created_at: Optional[datetime] = None
+    current_confidence: Optional[float] = None  # Confidence after decay/updates
+    replication_status: str = "unreplicated"  # unreplicated, replicated, failed_replication, contested
+    citation_count: int = 0
+    status: str = "active"  # active, superseded, retracted, deprecated
+    superseded_by: Optional[int] = None
 
 
 @dataclass

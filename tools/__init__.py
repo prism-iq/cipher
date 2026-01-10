@@ -28,6 +28,15 @@ from .nlp_extractor import (
     ScientificEntity,
     ExtractedClaim
 )
+from .temporal_tracker import (
+    TemporalTracker,
+    get_temporal_tracker,
+    TemporalState,
+    EvidenceEvent,
+    TemporalPattern,
+    ReplicationStatus,
+    ClaimStatus
+)
 
 __all__ = [
     # Hash Learning
@@ -72,4 +81,13 @@ __all__ = [
     'CausalRelation',
     'ScientificEntity',
     'ExtractedClaim',
+
+    # Temporal Tracking
+    'TemporalTracker',
+    'get_temporal_tracker',
+    'TemporalState',
+    'EvidenceEvent',
+    'TemporalPattern',
+    'ReplicationStatus',
+    'ClaimStatus',
 ]

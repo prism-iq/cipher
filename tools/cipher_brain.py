@@ -40,13 +40,14 @@ logger = logging.getLogger(__name__)
 
 
 class Domain(Enum):
-    """The six domains of expertise"""
+    """The seven domains of expertise"""
     MATHEMATICS = 1
     NEUROSCIENCES = 2
     BIOLOGY = 3
     PSYCHOLOGY = 4
     MEDICINE = 5
     ART = 6
+    PHILOSOPHY = 7
 
 
 @dataclass
@@ -193,9 +194,9 @@ class CipherBrain:
         if self.pool:
             await self.pool.execute('''
                 INSERT INTO synthesis.thoughts
-                (thought_type, content, domains, importance)
-                VALUES ($1, $2, $3, $4)
-            ''', thought_type, content,
+                (thought, thought_type, content, domains, importance)
+                VALUES ($1, $2, $3, $4, $5)
+            ''', content, thought_type, content,
                 [d.value for d in (domains or [])], importance)
 
         logger.debug(f"Thought [{thought_type}]: {content[:100]}...")
@@ -874,9 +875,35 @@ class CipherBrain:
 
         return domains or [Domain.BIOLOGY]  # Default to biology if unsure
 
+    def _parse_date(self, date_value) -> Optional[datetime]:
+        """Parse date from various formats to datetime object."""
+        if date_value is None:
+            return None
+        if isinstance(date_value, datetime):
+            return date_value
+        if isinstance(date_value, str):
+            # Try various date formats
+            for fmt in [
+                '%Y-%m-%dT%H:%M:%S%z',      # ISO with timezone
+                '%Y-%m-%dT%H:%M:%S+00:00',  # ISO with explicit UTC
+                '%Y-%m-%dT%H:%M:%S',        # ISO without timezone
+                '%Y-%m-%d',                  # Simple date
+            ]:
+                try:
+                    return datetime.strptime(date_value.replace('+00:00', ''), fmt.replace('%z', '').replace('+00:00', ''))
+                except ValueError:
+                    continue
+            # Last resort: try to parse just the date part
+            try:
+                return datetime.strptime(date_value[:10], '%Y-%m-%d')
+            except (ValueError, IndexError):
+                return None
+        return None
+
     # Database operations
     async def _save_source(self, paper: Dict, quality_score: float, domains: List[Domain]) -> int:
         """Save paper source to database."""
+        pub_date = self._parse_date(paper.get('publication_date'))
         async with self.pool.acquire() as conn:
             result = await conn.fetchrow('''
                 INSERT INTO synthesis.sources
@@ -894,7 +921,7 @@ class CipherBrain:
                 paper.get('title'),
                 json.dumps(paper.get('authors', [])),
                 paper.get('abstract'),
-                paper.get('publication_date'),
+                pub_date,
                 paper.get('journal'),
                 paper.get('citation_count', 0),
                 [d.value for d in domains],

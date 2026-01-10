@@ -172,10 +172,11 @@ class OpenAlexClient(AcademicSource):
         """
         # Build filter string
         filters = []
+        search_query = None
 
         if query:
-            # Use default.search for full-text search
-            filters.append(f'default.search:{query}')
+            # Use search parameter for full-text search (not filter)
+            search_query = query
 
         if concept_ids:
             concept_filter = '|'.join(concept_ids)
@@ -196,6 +197,9 @@ class OpenAlexClient(AcademicSource):
             'sort': sort,
             'mailto': self.email
         }
+
+        if search_query:
+            params['search'] = search_query
 
         if filters:
             params['filter'] = ','.join(filters)

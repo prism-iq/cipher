@@ -96,14 +96,19 @@ After deep analysis of the CIPHER codebase, several cross-domain opportunities e
 - **Cross-domain bridge**: Math (cosine similarity) ↔ Neuro (distributed representations)
 - **Status**: Ready to use
 
-#### 2. **NLP Extraction Enhancement**
-- Current claim extraction uses regex patterns (finding_patterns, hypothesis_patterns)
-- **Limitation**: Misses nuanced claims, context-dependent assertions
-- **Opportunity**: Integrate spaCy/transformers for:
-  - Named Entity Recognition (scientific terms)
-  - Dependency parsing (causal relationships)
-  - Coreference resolution (track concepts across sentences)
+#### 2. **NLP Extraction Enhancement** ✅ IMPLEMENTED
+- ~~Current claim extraction uses regex patterns (finding_patterns, hypothesis_patterns)~~
+- **DONE**: Added spaCy-based NLP extraction with:
+  - Named Entity Recognition (scientific terms, measurements, stats)
+  - Dependency parsing for causal relation extraction
+  - Hedging/certainty marker detection
+  - Statistical info extraction (p-values, N, effect sizes)
+- **Implementation**:
+  - `tools/nlp_extractor.py` - NLPExtractor with full linguistic analysis
+  - `cipher_brain.py` - Auto-uses NLP with regex fallback
+  - New claim fields: `causal_relations`, `hedging_markers`, `negation`
 - **Cross-domain bridge**: Math (formal grammars) ↔ Neuro (language processing) ↔ Psychology (semantics)
+- **Status**: Ready to use
 
 #### 3. **Temporal Dynamics Missing**
 - System captures snapshots but not evolution of knowledge

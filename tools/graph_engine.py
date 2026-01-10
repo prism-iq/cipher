@@ -157,10 +157,9 @@ class GraphEngine:
 
         # Load nodes (claims)
         rows = await self._conn.fetch("""
-            SELECT id, claim_text, claim_type, domains,
-                   COALESCE(current_confidence, confidence) as confidence
+            SELECT id, claim_text, claim_type, domains, confidence
             FROM synthesis.claims
-            WHERE COALESCE(current_confidence, confidence) >= $1
+            WHERE confidence >= $1
         """, min_confidence)
 
         for row in rows:
@@ -695,13 +694,22 @@ class GraphEngine:
     # COMMUNITY DETECTION
     # =========================================================================
 
-    def detect_communities(self) -> List[Community]:
+    def detect_communities(self, max_iterations: int = 10) -> List[Community]:
         """
         Detect communities using a Louvain-like algorithm.
 
         Groups claims into coherent clusters.
+
+        Args:
+            max_iterations: Maximum iterations for convergence (default 10)
         """
         self._ensure_loaded()
+
+        # Skip community detection for very large graphs
+        edge_count = sum(len(adj) for adj in self._adjacency.values())
+        if edge_count > 20000:
+            logger.warning(f"Graph too large ({edge_count} edges) for community detection. Returning empty.")
+            return []
 
         # Initialize: each node is its own community
         community = {nid: nid for nid in self._nodes}
@@ -726,8 +734,10 @@ class GraphEngine:
             return communities
 
         improved = True
-        while improved:
+        iteration = 0
+        while improved and iteration < max_iterations:
             improved = False
+            iteration += 1
 
             for node_id in self._nodes:
                 current_comm = community[node_id]
@@ -971,8 +981,13 @@ class GraphEngine:
     # GRAPH STATISTICS
     # =========================================================================
 
-    def compute_graph_stats(self) -> GraphStats:
-        """Compute overall graph statistics."""
+    def compute_graph_stats(self, fast: bool = False) -> GraphStats:
+        """
+        Compute overall graph statistics.
+
+        Args:
+            fast: If True, skip expensive clustering and community detection
+        """
         self._ensure_loaded()
 
         node_count = len(self._nodes)
@@ -992,6 +1007,27 @@ class GraphEngine:
         # Average degree
         avg_degree = sum(n.degree for n in self._nodes.values()) / node_count
 
+        # Cross-domain edge ratio (always compute - it's fast)
+        cross_domain_edges = sum(
+            1 for adj in self._adjacency.values()
+            for _, edge in adj if edge.cross_domain
+        )
+        cross_domain_ratio = cross_domain_edges / edge_count if edge_count > 0 else 0.0
+
+        # Skip expensive operations for large graphs or fast mode
+        if fast or edge_count > 10000:
+            logger.info(f"Skipping clustering/community detection for large graph ({edge_count} edges)")
+            return GraphStats(
+                node_count=node_count,
+                edge_count=edge_count,
+                density=density,
+                avg_degree=avg_degree,
+                avg_clustering=0.0,
+                num_communities=0,
+                largest_community_size=0,
+                cross_domain_edge_ratio=cross_domain_ratio
+            )
+
         # Compute clustering if not done
         if all(n.clustering_coefficient == 0 for n in self._nodes.values()):
             self.compute_clustering_coefficients()
@@ -1001,13 +1037,6 @@ class GraphEngine:
         communities = self.detect_communities()
         num_communities = len(communities)
         largest_community_size = max((c.size for c in communities), default=0)
-
-        # Cross-domain edge ratio
-        cross_domain_edges = sum(
-            1 for adj in self._adjacency.values()
-            for _, edge in adj if edge.cross_domain
-        )
-        cross_domain_ratio = cross_domain_edges / edge_count if edge_count > 0 else 0.0
 
         return GraphStats(
             node_count=node_count,

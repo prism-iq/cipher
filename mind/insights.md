@@ -157,14 +157,22 @@ After deep analysis of the CIPHER codebase, several cross-domain opportunities e
 - **Cross-domain bridge**: Math (graph theory, algorithms) ↔ Neuro (connectomics) ↔ Biology (protein networks)
 - **Status**: Ready to use
 
-#### 6. **LLM Integration Point**
-- `discovered_by VARCHAR(50)` includes 'llm' option but not implemented
-- **Opportunity**: Use LLMs for:
-  - Sophisticated claim extraction
-  - Hypothesis generation from patterns
-  - Cross-domain analogy detection
-  - Natural language synthesis reports
-- **Cross-domain bridge**: All domains (synthesis is inherently cross-domain)
+#### 6. **LLM Integration Point** ✅ IMPLEMENTED
+- ~~`discovered_by VARCHAR(50)` includes 'llm' option but not implemented~~
+- **DONE**: Added comprehensive LLM integration with:
+  - Multi-provider support (Anthropic Claude, OpenAI GPT, Ollama local)
+  - Sophisticated claim extraction with confidence, hedging, causal relations
+  - Hypothesis generation from detected patterns
+  - Cross-domain analogy detection between any domain pairs
+  - Natural language synthesis reports with executive summaries
+  - Entity resolution and disambiguation
+- **Implementation**:
+  - `tools/llm_integration.py` - LLMIntegration class with AnthropicBackend, OpenAIBackend, OllamaBackend
+  - Structured output parsing (JSON extraction from LLM responses)
+  - `cli.py` - New commands: `llm-status`, `llm-extract`, `llm-hypotheses`, `llm-analogies`, `llm-synthesis`
+- **Configuration**: Via environment variables (ANTHROPIC_API_KEY, OPENAI_API_KEY, CIPHER_LLM_PROVIDER)
+- **Cross-domain bridge**: All domains (LLM synthesis is inherently cross-domain)
+- **Status**: Ready to use (requires API key)
 
 ---
 

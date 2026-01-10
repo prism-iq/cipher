@@ -1196,6 +1196,330 @@ async def all_paths(source_id: int, target_id: int, max_depth: int = 5, limit: i
         await engine.close()
 
 
+# =========================================================================
+# LLM INTEGRATION COMMANDS
+# =========================================================================
+
+async def llm_extract(text: str, title: str = ""):
+    """Extract claims from text using LLM."""
+    from tools.llm_integration import LLMIntegration, LLMConfig
+
+    print("Extracting claims using LLM")
+    print("=" * 60)
+
+    try:
+        llm_config = LLMConfig.from_env()
+        print(f"Provider: {llm_config.provider.value}")
+        print(f"Model: {llm_config.model}")
+
+        llm = LLMIntegration(llm_config)
+        claims = await llm.extract_claims(text, title)
+
+        if not claims:
+            print("\nNo claims extracted.")
+            return
+
+        print(f"\nExtracted {len(claims)} claims:\n")
+
+        for i, claim in enumerate(claims, 1):
+            print(f"{i}. [{claim.claim_type}] (conf: {claim.confidence:.2f})")
+            print(f"   {claim.claim_text[:100]}...")
+            print(f"   Evidence: {claim.evidence_strength} | Hedging: {claim.hedging_level:.2f}")
+            if claim.entities:
+                print(f"   Entities: {claim.entities[:5]}")
+            if claim.causal_relations:
+                print(f"   Causal: {claim.causal_relations[:2]}")
+            print()
+
+    except Exception as e:
+        print(f"Error: {e}")
+
+
+async def llm_hypotheses(num: int = 5):
+    """Generate hypotheses from knowledge base patterns."""
+    from tools.llm_integration import LLMIntegration, LLMConfig
+    import asyncpg
+
+    print("Generating hypotheses using LLM")
+    print("=" * 60)
+
+    try:
+        # Get patterns and claims from DB
+        conn = await asyncpg.connect(config.db.connection_string)
+
+        patterns = await conn.fetch("""
+            SELECT pattern_name, pattern_type, description, domains, confidence
+            FROM synthesis.patterns
+            ORDER BY novelty_score * confidence DESC
+            LIMIT 20
+        """)
+
+        claims = await conn.fetch("""
+            SELECT claim_text, claim_type, domains, confidence
+            FROM synthesis.claims
+            ORDER BY confidence DESC
+            LIMIT 50
+        """)
+
+        await conn.close()
+
+        patterns_list = [dict(p) for p in patterns]
+        claims_list = [dict(c) for c in claims]
+
+        if not patterns_list:
+            print("\nNo patterns in knowledge base. Run learning first.")
+            return
+
+        llm_config = LLMConfig.from_env()
+        print(f"Provider: {llm_config.provider.value}")
+        print(f"Model: {llm_config.model}")
+
+        llm = LLMIntegration(llm_config)
+        hypotheses = await llm.generate_hypotheses(patterns_list, claims_list, num)
+
+        if not hypotheses:
+            print("\nNo hypotheses generated.")
+            return
+
+        print(f"\nGenerated {len(hypotheses)} hypotheses:\n")
+
+        for i, h in enumerate(hypotheses, 1):
+            print(f"{i}. {h.hypothesis_text}")
+            print(f"   Domains: {', '.join(h.domains_involved)}")
+            print(f"   Testability: {h.testability:.2f} | Novelty: {h.novelty:.2f} | Confidence: {h.confidence:.2f}")
+            print(f"   Reasoning: {h.supporting_reasoning[:100]}...")
+            if h.suggested_experiments:
+                print(f"   Experiments: {h.suggested_experiments[:2]}")
+            print()
+
+    except Exception as e:
+        print(f"Error: {e}")
+
+
+async def llm_analogies(domain_a: str, domain_b: str, num: int = 5):
+    """Detect cross-domain analogies using LLM."""
+    from tools.llm_integration import LLMIntegration, LLMConfig
+    from tools.cipher_brain import Domain
+    import asyncpg
+
+    domain_map = {
+        'math': Domain.MATHEMATICS,
+        'neuro': Domain.NEUROSCIENCES,
+        'bio': Domain.BIOLOGY,
+        'psych': Domain.PSYCHOLOGY,
+        'med': Domain.MEDICINE,
+        'art': Domain.ART,
+    }
+
+    if domain_a.lower() not in domain_map or domain_b.lower() not in domain_map:
+        print(f"Unknown domain. Available: {list(domain_map.keys())}")
+        return
+
+    da = domain_map[domain_a.lower()]
+    db = domain_map[domain_b.lower()]
+
+    print(f"Detecting analogies between {da.name} and {db.name}")
+    print("=" * 60)
+
+    try:
+        conn = await asyncpg.connect(config.db.connection_string)
+
+        claims_a = await conn.fetch("""
+            SELECT claim_text, claim_type, confidence
+            FROM synthesis.claims
+            WHERE $1 = ANY(domains)
+            ORDER BY confidence DESC
+            LIMIT 30
+        """, da.value)
+
+        claims_b = await conn.fetch("""
+            SELECT claim_text, claim_type, confidence
+            FROM synthesis.claims
+            WHERE $1 = ANY(domains)
+            ORDER BY confidence DESC
+            LIMIT 30
+        """, db.value)
+
+        await conn.close()
+
+        claims_a_list = [dict(c) for c in claims_a]
+        claims_b_list = [dict(c) for c in claims_b]
+
+        if not claims_a_list or not claims_b_list:
+            print(f"\nInsufficient claims in one or both domains.")
+            return
+
+        llm_config = LLMConfig.from_env()
+        print(f"Provider: {llm_config.provider.value}")
+        print(f"Model: {llm_config.model}")
+
+        llm = LLMIntegration(llm_config)
+        analogies = await llm.detect_analogies(
+            da.name, db.name, claims_a_list, claims_b_list, num
+        )
+
+        if not analogies:
+            print("\nNo analogies detected.")
+            return
+
+        print(f"\nDetected {len(analogies)} analogies:\n")
+
+        for i, a in enumerate(analogies, 1):
+            print(f"{i}. {a.source_concept} ({a.source_domain}) <-> {a.target_concept} ({a.target_domain})")
+            print(f"   Strength: {a.strength:.2f}")
+            print(f"   {a.analogy_description[:150]}...")
+            if a.limitations:
+                print(f"   Limitations: {a.limitations[:2]}")
+            if a.research_opportunities:
+                print(f"   Opportunities: {a.research_opportunities[:2]}")
+            print()
+
+    except Exception as e:
+        print(f"Error: {e}")
+
+
+async def llm_synthesis(topic: str):
+    """Generate a synthesis report using LLM."""
+    from tools.llm_integration import LLMIntegration, LLMConfig
+    import asyncpg
+
+    print(f"Generating synthesis report on: {topic}")
+    print("=" * 60)
+
+    try:
+        conn = await asyncpg.connect(config.db.connection_string)
+
+        # Search for relevant claims
+        claims = await conn.fetch("""
+            SELECT claim_text, claim_type, domains, confidence
+            FROM synthesis.claims
+            WHERE LOWER(claim_text) LIKE $1
+            ORDER BY confidence DESC
+            LIMIT 50
+        """, f"%{topic.lower()}%")
+
+        patterns = await conn.fetch("""
+            SELECT pattern_name, pattern_type, description, confidence, novelty_score
+            FROM synthesis.patterns
+            WHERE LOWER(description) LIKE $1
+            ORDER BY novelty_score * confidence DESC
+            LIMIT 20
+        """, f"%{topic.lower()}%")
+
+        contradictions = await conn.fetch("""
+            SELECT c1.claim_text as claim_a, c2.claim_text as claim_b,
+                   ct.contradiction_type, ct.severity
+            FROM synthesis.contradictions ct
+            JOIN synthesis.claims c1 ON ct.claim_a_id = c1.id
+            JOIN synthesis.claims c2 ON ct.claim_b_id = c2.id
+            WHERE ct.resolution_status = 'unresolved'
+            LIMIT 10
+        """)
+
+        gaps = await conn.fetch("""
+            SELECT gap_description, importance, tractability
+            FROM synthesis.gaps
+            WHERE status = 'open'
+            LIMIT 10
+        """)
+
+        await conn.close()
+
+        claims_list = [dict(c) for c in claims]
+        patterns_list = [dict(p) for p in patterns]
+        contradictions_list = [dict(c) for c in contradictions]
+        gaps_list = [dict(g) for g in gaps]
+
+        if not claims_list:
+            print(f"\nNo claims found related to '{topic}'.")
+            return
+
+        llm_config = LLMConfig.from_env()
+        print(f"Provider: {llm_config.provider.value}")
+        print(f"Model: {llm_config.model}")
+        print(f"\nAnalyzing {len(claims_list)} claims, {len(patterns_list)} patterns...")
+
+        llm = LLMIntegration(llm_config)
+        report = await llm.generate_synthesis_report(
+            topic, claims_list, patterns_list, contradictions_list, gaps_list
+        )
+
+        print(f"\n{'='*60}")
+        print(f"SYNTHESIS REPORT: {report.title}")
+        print(f"{'='*60}")
+        print(f"\n## Executive Summary\n")
+        print(report.executive_summary)
+
+        print(f"\n## Key Findings\n")
+        for finding in report.key_findings:
+            print(f"- {finding}")
+
+        print(f"\n## Cross-Domain Insights\n")
+        for insight in report.cross_domain_insights:
+            print(f"- {insight}")
+
+        if report.contradictions_noted:
+            print(f"\n## Contradictions\n")
+            for c in report.contradictions_noted:
+                print(f"- {c}")
+
+        if report.knowledge_gaps:
+            print(f"\n## Knowledge Gaps\n")
+            for g in report.knowledge_gaps:
+                print(f"- {g}")
+
+        print(f"\n## Future Directions\n")
+        for direction in report.future_directions:
+            print(f"- {direction}")
+
+        print(f"\n{'='*60}")
+        print(f"Full report: {len(report.full_report)} characters")
+        print(f"Generated at: {report.generated_at}")
+
+    except Exception as e:
+        print(f"Error: {e}")
+
+
+async def llm_status():
+    """Show LLM configuration status."""
+    from tools.llm_integration import LLMConfig
+
+    print("LLM Integration Status")
+    print("=" * 60)
+
+    try:
+        llm_config = LLMConfig.from_env()
+
+        print(f"\nProvider: {llm_config.provider.value}")
+        print(f"Model: {llm_config.model}")
+        print(f"Max tokens: {llm_config.max_tokens}")
+        print(f"Temperature: {llm_config.temperature}")
+
+        if llm_config.provider.value == "anthropic":
+            api_key = llm_config.api_key
+            if api_key:
+                print(f"API Key: {api_key[:8]}...{api_key[-4:]}")
+            else:
+                print("API Key: NOT SET (set ANTHROPIC_API_KEY)")
+        elif llm_config.provider.value == "openai":
+            api_key = llm_config.api_key
+            if api_key:
+                print(f"API Key: {api_key[:8]}...{api_key[-4:]}")
+            else:
+                print("API Key: NOT SET (set OPENAI_API_KEY)")
+        else:
+            print(f"Base URL: {llm_config.base_url}")
+
+        print("\nEnvironment Variables:")
+        print(f"  CIPHER_LLM_PROVIDER = {os.getenv('CIPHER_LLM_PROVIDER', '(not set, default: anthropic)')}")
+        print(f"  CIPHER_LLM_MODEL = {os.getenv('CIPHER_LLM_MODEL', '(not set)')}")
+        print(f"  ANTHROPIC_API_KEY = {'set' if os.getenv('ANTHROPIC_API_KEY') else 'not set'}")
+        print(f"  OPENAI_API_KEY = {'set' if os.getenv('OPENAI_API_KEY') else 'not set'}")
+
+    except Exception as e:
+        print(f"Error: {e}")
+
+
 def main():
     parser = argparse.ArgumentParser(
         description='CIPHER Command Line Interface',
@@ -1241,6 +1565,13 @@ Graph Engine Commands:
   python cli.py communities
   python cli.py graph-bridges math neuro
   python cli.py graph-hubs --min-domains 3
+
+LLM Integration Commands:
+  python cli.py llm-status
+  python cli.py llm-extract "Neural plasticity enables learning..."
+  python cli.py llm-hypotheses -n 5
+  python cli.py llm-analogies math neuro
+  python cli.py llm-synthesis "neural networks"
         """
     )
 
@@ -1412,6 +1743,32 @@ Graph Engine Commands:
     hubs_parser.add_argument('--min-domains', type=int, default=2, help='Minimum domains spanned')
     hubs_parser.add_argument('-n', type=int, default=20, help='Max results')
 
+    # =========================================================================
+    # LLM INTEGRATION COMMANDS
+    # =========================================================================
+
+    # LLM Status
+    subparsers.add_parser('llm-status', help='Show LLM configuration status')
+
+    # LLM Extract
+    llm_extract_parser = subparsers.add_parser('llm-extract', help='Extract claims using LLM')
+    llm_extract_parser.add_argument('text', type=str, help='Text to extract claims from')
+    llm_extract_parser.add_argument('--title', type=str, default='', help='Paper title for context')
+
+    # LLM Hypotheses
+    llm_hyp_parser = subparsers.add_parser('llm-hypotheses', help='Generate hypotheses using LLM')
+    llm_hyp_parser.add_argument('-n', type=int, default=5, help='Number of hypotheses')
+
+    # LLM Analogies
+    llm_analog_parser = subparsers.add_parser('llm-analogies', help='Detect cross-domain analogies')
+    llm_analog_parser.add_argument('domain_a', type=str, help='First domain')
+    llm_analog_parser.add_argument('domain_b', type=str, help='Second domain')
+    llm_analog_parser.add_argument('-n', type=int, default=5, help='Number of analogies')
+
+    # LLM Synthesis
+    llm_synth_parser = subparsers.add_parser('llm-synthesis', help='Generate synthesis report')
+    llm_synth_parser.add_argument('topic', type=str, help='Topic to synthesize')
+
     args = parser.parse_args()
 
     if args.command == 'status':
@@ -1487,6 +1844,17 @@ Graph Engine Commands:
         asyncio.run(domain_bridges(args.domain_a, args.domain_b, args.n))
     elif args.command == 'graph-hubs':
         asyncio.run(cross_domain_hubs(args.min_domains, args.n))
+    # LLM Integration Commands
+    elif args.command == 'llm-status':
+        asyncio.run(llm_status())
+    elif args.command == 'llm-extract':
+        asyncio.run(llm_extract(args.text, args.title))
+    elif args.command == 'llm-hypotheses':
+        asyncio.run(llm_hypotheses(args.n))
+    elif args.command == 'llm-analogies':
+        asyncio.run(llm_analogies(args.domain_a, args.domain_b, args.n))
+    elif args.command == 'llm-synthesis':
+        asyncio.run(llm_synthesis(args.topic))
     else:
         parser.print_help()
 

@@ -56,6 +56,21 @@ from .graph_engine import (
     GraphStats,
     ConnectionType
 )
+from .llm_integration import (
+    LLMIntegration,
+    get_llm_integration,
+    LLMConfig,
+    LLMProvider,
+    LLMModel,
+    ExtractedClaimLLM,
+    GeneratedHypothesis,
+    CrossDomainAnalogy,
+    SynthesisReport,
+    extract_claims_llm,
+    generate_hypotheses_llm,
+    detect_analogies_llm,
+    generate_synthesis_report_llm
+)
 
 __all__ = [
     # Hash Learning
@@ -128,4 +143,19 @@ __all__ = [
     'Community',
     'GraphStats',
     'ConnectionType',
+
+    # LLM Integration
+    'LLMIntegration',
+    'get_llm_integration',
+    'LLMConfig',
+    'LLMProvider',
+    'LLMModel',
+    'ExtractedClaimLLM',
+    'GeneratedHypothesis',
+    'CrossDomainAnalogy',
+    'SynthesisReport',
+    'extract_claims_llm',
+    'generate_hypotheses_llm',
+    'detect_analogies_llm',
+    'generate_synthesis_report_llm',
 ]

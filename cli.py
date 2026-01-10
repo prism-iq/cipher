@@ -21,6 +21,15 @@ from datetime import datetime
 
 sys.path.insert(0, str(Path(__file__).parent))
 
+# Load environment variables from .env file if present
+try:
+    from dotenv import load_dotenv
+    env_path = Path(__file__).parent / '.env'
+    if env_path.exists():
+        load_dotenv(env_path)
+except ImportError:
+    pass  # python-dotenv not installed
+
 from config.settings import config
 
 

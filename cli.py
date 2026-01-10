@@ -627,6 +627,314 @@ async def record_replication(claim_id: int, success: bool, partial: bool = False
         await tracker.close()
 
 
+# =========================================================================
+# ACTIVE LEARNING COMMANDS
+# =========================================================================
+
+async def learning_plan(strategy: str = 'ucb', max_targets: int = 10):
+    """Generate an active learning plan."""
+    from tools.active_learner import ActiveLearner, LearningStrategy
+
+    strategy_map = {
+        'ucb': LearningStrategy.UCB,
+        'uncertainty': LearningStrategy.UNCERTAINTY_SAMPLING,
+        'contradiction': LearningStrategy.CONTRADICTION_RESOLUTION,
+        'hypothesis': LearningStrategy.HYPOTHESIS_TESTING,
+        'gap': LearningStrategy.GAP_FILLING,
+        'exploration': LearningStrategy.EXPLORATION,
+        'exploitation': LearningStrategy.EXPLOITATION,
+    }
+
+    print(f"Generating Active Learning Plan")
+    print(f"Strategy: {strategy}")
+    print("=" * 60)
+
+    learner = ActiveLearner(config.db.connection_string)
+    await learner.connect()
+
+    try:
+        strat = strategy_map.get(strategy, LearningStrategy.UCB)
+        plan = await learner.create_learning_plan(strat, max_targets)
+
+        print(f"\n{plan.rationale}")
+        print(f"Total Priority: {plan.total_priority:.2f}")
+        print(f"Expected Value: {plan.expected_value:.2f}")
+        print(f"\nPrioritized Targets:\n")
+
+        for i, target in enumerate(plan.targets, 1):
+            print(f"{i}. [{target.target_type.upper()}] {target.target_name}")
+            print(f"   Priority: {target.priority:.3f} | Uncertainty: {target.uncertainty:.3f}")
+            print(f"   Strategy: {target.strategy.value}")
+            print(f"   Rationale: {target.rationale}")
+            if target.search_queries:
+                print(f"   Queries: {target.search_queries[:2]}")
+            print()
+
+    finally:
+        await learner.close()
+
+
+async def domain_uncertainty():
+    """Show uncertainty metrics for each domain."""
+    from tools.active_learner import ActiveLearner
+
+    print("Domain Uncertainty Analysis")
+    print("=" * 70)
+
+    learner = ActiveLearner(config.db.connection_string)
+    await learner.connect()
+
+    try:
+        uncertainties = await learner.compute_domain_uncertainty()
+
+        print(f"\n{'Domain':<15} {'Claims':<8} {'Conf':<8} {'Var':<8} {'Contr':<8} {'Stale':<8} {'Priority':<8}")
+        print("-" * 70)
+
+        for du in uncertainties:
+            print(f"{du.domain_name:<15} {du.claim_count:<8} {du.avg_confidence:<8.3f} "
+                  f"{du.confidence_variance:<8.3f} {du.contradiction_count:<8} "
+                  f"{du.staleness_days:<8.0f} {du.priority_score:<8.3f}")
+
+        print("\nLegend:")
+        print("  Conf = Average confidence")
+        print("  Var = Confidence variance")
+        print("  Contr = Unresolved contradictions")
+        print("  Stale = Days since last learning")
+        print("  Priority = Overall priority score (higher = needs more attention)")
+
+    finally:
+        await learner.close()
+
+
+async def show_contradictions(limit: int = 20):
+    """Show unresolved contradictions."""
+    from tools.active_learner import ActiveLearner
+
+    print("Unresolved Contradictions")
+    print("=" * 60)
+
+    learner = ActiveLearner(config.db.connection_string)
+    await learner.connect()
+
+    try:
+        targets = await learner.get_unresolved_contradictions(limit)
+
+        if not targets:
+            print("\nNo unresolved contradictions found.")
+            return
+
+        print(f"\nFound {len(targets)} unresolved contradictions:\n")
+
+        for i, target in enumerate(targets, 1):
+            print(f"{i}. Severity: {target.priority:.2f}")
+            print(f"   Claim A: {target.metadata.get('claim_a', '')[:80]}...")
+            print(f"   Claim B: {target.metadata.get('claim_b', '')[:80]}...")
+            print(f"   Suggested queries: {target.search_queries[:2]}")
+            print()
+
+    finally:
+        await learner.close()
+
+
+async def show_hypotheses(limit: int = 20):
+    """Show open hypotheses needing testing."""
+    from tools.active_learner import ActiveLearner
+
+    print("Open Hypotheses")
+    print("=" * 60)
+
+    learner = ActiveLearner(config.db.connection_string)
+    await learner.connect()
+
+    try:
+        targets = await learner.get_open_hypotheses(limit)
+
+        if not targets:
+            print("\nNo open hypotheses found.")
+            return
+
+        print(f"\nFound {len(targets)} open hypotheses:\n")
+
+        for i, target in enumerate(targets, 1):
+            print(f"{i}. Priority: {target.priority:.2f} | Status: {target.metadata.get('status', 'unknown')}")
+            print(f"   {target.metadata.get('hypothesis', '')[:100]}...")
+            if target.metadata.get('source_pattern'):
+                print(f"   From pattern: {target.metadata['source_pattern']}")
+            print(f"   Search queries: {target.search_queries[:2]}")
+            print()
+
+    finally:
+        await learner.close()
+
+
+async def show_gaps(limit: int = 20):
+    """Show open knowledge gaps."""
+    from tools.active_learner import ActiveLearner
+
+    print("Knowledge Gaps")
+    print("=" * 60)
+
+    learner = ActiveLearner(config.db.connection_string)
+    await learner.connect()
+
+    try:
+        targets = await learner.get_knowledge_gaps(limit)
+
+        if not targets:
+            print("\nNo open knowledge gaps found.")
+            return
+
+        print(f"\nFound {len(targets)} knowledge gaps:\n")
+
+        for i, target in enumerate(targets, 1):
+            importance = target.metadata.get('importance', 0)
+            tractability = target.metadata.get('tractability', 0)
+            print(f"{i}. Priority: {target.priority:.2f} (importance={importance:.2f}, tractability={tractability:.2f})")
+            print(f"   {target.metadata.get('description', '')[:100]}...")
+            if target.metadata.get('directions'):
+                print(f"   Research directions: {target.metadata['directions'][:2]}")
+            print(f"   Search queries: {target.search_queries[:2]}")
+            print()
+
+    finally:
+        await learner.close()
+
+
+async def low_confidence_concepts(threshold: float = 0.4, limit: int = 30):
+    """Show concepts with low confidence claims."""
+    from tools.active_learner import ActiveLearner
+
+    print(f"Low Confidence Concepts (threshold: {threshold})")
+    print("=" * 60)
+
+    learner = ActiveLearner(config.db.connection_string)
+    await learner.connect()
+
+    try:
+        targets = await learner.get_low_confidence_concepts(threshold, limit)
+
+        if not targets:
+            print(f"\nNo concepts with confidence < {threshold} found.")
+            return
+
+        print(f"\nFound {len(targets)} low-confidence concepts:\n")
+
+        for i, target in enumerate(targets, 1):
+            claim_count = target.metadata.get('claim_count', 0)
+            avg_conf = target.metadata.get('avg_confidence', 0)
+            print(f"{i}. {target.target_name}")
+            print(f"   Claims: {claim_count} | Avg confidence: {avg_conf:.3f}")
+            print(f"   Search queries: {target.search_queries[:2]}")
+            print()
+
+    finally:
+        await learner.close()
+
+
+async def active_learn(strategy: str = 'ucb', max_papers: int = 50):
+    """Execute active learning using the specified strategy."""
+    from tools.active_learner import ActiveLearner, LearningStrategy
+    from tools.cipher_brain import CipherBrain, Domain
+    from tools.domain_learner import DomainLearner
+
+    strategy_map = {
+        'ucb': LearningStrategy.UCB,
+        'uncertainty': LearningStrategy.UNCERTAINTY_SAMPLING,
+        'contradiction': LearningStrategy.CONTRADICTION_RESOLUTION,
+        'hypothesis': LearningStrategy.HYPOTHESIS_TESTING,
+        'gap': LearningStrategy.GAP_FILLING,
+        'exploration': LearningStrategy.EXPLORATION,
+        'exploitation': LearningStrategy.EXPLOITATION,
+    }
+
+    print(f"Executing Active Learning")
+    print(f"Strategy: {strategy}")
+    print(f"Max papers per target: {max_papers}")
+    print("=" * 60)
+
+    # Get learning plan
+    learner = ActiveLearner(config.db.connection_string)
+    await learner.connect()
+
+    brain = CipherBrain(config.db.connection_string)
+    await brain.connect()
+
+    domain_learner = DomainLearner(brain, {
+        'email': config.api.openalex_email,
+    })
+
+    try:
+        strat = strategy_map.get(strategy, LearningStrategy.UCB)
+        plan = await learner.create_learning_plan(strat, max_targets=5)
+
+        print(f"\nLearning plan: {plan.rationale}")
+        print(f"Targets: {len(plan.targets)}\n")
+
+        total_papers = 0
+        total_claims = 0
+        total_connections = 0
+
+        for target in plan.targets:
+            print(f"\n>> Processing: {target.target_name}")
+
+            if target.target_type == 'domain':
+                # Use domain learner for domain targets
+                domain_map = {
+                    'mathematics': Domain.MATHEMATICS,
+                    'neurosciences': Domain.NEUROSCIENCES,
+                    'biology': Domain.BIOLOGY,
+                    'psychology': Domain.PSYCHOLOGY,
+                    'medicine': Domain.MEDICINE,
+                    'art': Domain.ART,
+                }
+
+                domain = domain_map.get(target.target_name.lower())
+                if domain:
+                    session = await domain_learner.learn_domain(
+                        domain,
+                        max_papers=max_papers
+                    )
+                    total_papers += session.papers_fetched
+                    total_claims += session.claims_extracted
+                    total_connections += session.connections_found
+
+                    print(f"   Papers: {session.papers_fetched}, Claims: {session.claims_extracted}, "
+                          f"Connections: {session.connections_found}")
+
+            elif target.search_queries:
+                # Use cross-domain search for other targets
+                session = await domain_learner.learn_cross_domain(
+                    concepts=target.search_queries[:2],
+                    max_papers=max_papers // 2
+                )
+                total_papers += session.papers_fetched
+                total_claims += session.claims_extracted
+                total_connections += session.connections_found
+
+                print(f"   Papers: {session.papers_fetched}, Claims: {session.claims_extracted}, "
+                      f"Connections: {session.connections_found}")
+
+            # Record learning round
+            domain_id = target.domains[0] if target.domains else None
+            await learner.record_learning_round(
+                domain_id=domain_id,
+                papers_processed=total_papers,
+                claims_extracted=total_claims,
+                connections_found=total_connections
+            )
+
+        print(f"\n" + "=" * 60)
+        print(f"Active Learning Complete!")
+        print(f"Total papers: {total_papers}")
+        print(f"Total claims: {total_claims}")
+        print(f"Total connections: {total_connections}")
+
+    finally:
+        await domain_learner.close()
+        await brain.close()
+        await learner.close()
+
+
 def main():
     parser = argparse.ArgumentParser(
         description='CIPHER Command Line Interface',
@@ -654,6 +962,15 @@ Temporal Tracking Commands:
   python cli.py claim-temporal 42
   python cli.py paradigm-shifts --days 730
   python cli.py record-replication 42 --success
+
+Active Learning Commands:
+  python cli.py learning-plan --strategy ucb
+  python cli.py domain-uncertainty
+  python cli.py contradictions
+  python cli.py hypotheses
+  python cli.py gaps
+  python cli.py low-confidence --threshold 0.3
+  python cli.py active-learn --strategy ucb --max-papers 50
         """
     )
 
@@ -741,6 +1058,46 @@ Temporal Tracking Commands:
     repl.add_argument('--failure', action='store_true', help='Replication failed')
     repl.add_argument('--partial', action='store_true', help='Partial replication')
 
+    # =========================================================================
+    # ACTIVE LEARNING COMMANDS
+    # =========================================================================
+
+    # Learning Plan
+    plan_parser = subparsers.add_parser('learning-plan', help='Generate active learning plan')
+    plan_parser.add_argument('--strategy', type=str, default='ucb',
+                            choices=['ucb', 'uncertainty', 'contradiction', 'hypothesis',
+                                    'gap', 'exploration', 'exploitation'],
+                            help='Learning strategy')
+    plan_parser.add_argument('-n', type=int, default=10, help='Max targets')
+
+    # Domain Uncertainty
+    subparsers.add_parser('domain-uncertainty', help='Show domain uncertainty metrics')
+
+    # Contradictions
+    contr_parser = subparsers.add_parser('contradictions', help='Show unresolved contradictions')
+    contr_parser.add_argument('-n', type=int, default=20, help='Max results')
+
+    # Hypotheses
+    hyp_parser = subparsers.add_parser('hypotheses', help='Show open hypotheses')
+    hyp_parser.add_argument('-n', type=int, default=20, help='Max results')
+
+    # Gaps
+    gaps_parser = subparsers.add_parser('gaps', help='Show knowledge gaps')
+    gaps_parser.add_argument('-n', type=int, default=20, help='Max results')
+
+    # Low Confidence
+    low_conf = subparsers.add_parser('low-confidence', help='Show low confidence concepts')
+    low_conf.add_argument('--threshold', type=float, default=0.4, help='Confidence threshold')
+    low_conf.add_argument('-n', type=int, default=30, help='Max results')
+
+    # Active Learn (execute)
+    active = subparsers.add_parser('active-learn', help='Execute active learning')
+    active.add_argument('--strategy', type=str, default='ucb',
+                       choices=['ucb', 'uncertainty', 'contradiction', 'hypothesis',
+                               'gap', 'exploration', 'exploitation'],
+                       help='Learning strategy')
+    active.add_argument('--max-papers', type=int, default=50, help='Max papers per target')
+
     args = parser.parse_args()
 
     if args.command == 'status':
@@ -786,6 +1143,21 @@ Temporal Tracking Commands:
             asyncio.run(record_replication(args.claim_id, success=False, partial=False))
         else:
             print("Error: Must specify --success, --failure, or --partial")
+    # Active Learning Commands
+    elif args.command == 'learning-plan':
+        asyncio.run(learning_plan(args.strategy, args.n))
+    elif args.command == 'domain-uncertainty':
+        asyncio.run(domain_uncertainty())
+    elif args.command == 'contradictions':
+        asyncio.run(show_contradictions(args.n))
+    elif args.command == 'hypotheses':
+        asyncio.run(show_hypotheses(args.n))
+    elif args.command == 'gaps':
+        asyncio.run(show_gaps(args.n))
+    elif args.command == 'low-confidence':
+        asyncio.run(low_confidence_concepts(args.threshold, args.n))
+    elif args.command == 'active-learn':
+        asyncio.run(active_learn(args.strategy, args.max_papers))
     else:
         parser.print_help()
 

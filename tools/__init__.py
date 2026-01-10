@@ -37,6 +37,15 @@ from .temporal_tracker import (
     ReplicationStatus,
     ClaimStatus
 )
+from .active_learner import (
+    ActiveLearner,
+    get_active_learner,
+    create_learning_plan,
+    LearningStrategy,
+    LearningTarget,
+    DomainUncertainty,
+    ActiveLearningPlan
+)
 
 __all__ = [
     # Hash Learning
@@ -90,4 +99,13 @@ __all__ = [
     'TemporalPattern',
     'ReplicationStatus',
     'ClaimStatus',
+
+    # Active Learning
+    'ActiveLearner',
+    'get_active_learner',
+    'create_learning_plan',
+    'LearningStrategy',
+    'LearningTarget',
+    'DomainUncertainty',
+    'ActiveLearningPlan',
 ]

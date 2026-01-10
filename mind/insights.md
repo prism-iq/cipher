@@ -126,13 +126,20 @@ After deep analysis of the CIPHER codebase, several cross-domain opportunities e
 - **Cross-domain bridge**: Math (dynamical systems, exponential decay) ↔ Biology (evolution) ↔ Psychology (belief updating)
 - **Status**: Ready to use
 
-#### 4. **Active Learning Loop**
-- Current learning is passive (fetch → extract → store)
-- **Opportunity**: Implement active learning:
-  - Prioritize domains/concepts with high uncertainty
-  - Target contradictions for resolution
-  - Seek papers that could resolve open hypotheses
-- **Cross-domain bridge**: Math (optimization) ↔ Neuro (attention) ↔ Psychology (curiosity)
+#### 4. **Active Learning Loop** ✅ IMPLEMENTED
+- ~~Current learning is passive (fetch → extract → store)~~
+- **DONE**: Added active learning with multiple strategies:
+  - Uncertainty Sampling: Focus on low-confidence domains/concepts
+  - Upper Confidence Bound (UCB): Balance exploration vs exploitation
+  - Contradiction Resolution: Target papers that could resolve conflicts
+  - Hypothesis Testing: Seek evidence for/against open hypotheses
+  - Gap Filling: Target papers that could fill knowledge gaps
+  - Domain-level uncertainty metrics with staleness tracking
+- **Implementation**:
+  - `tools/active_learner.py` - ActiveLearner class with UCB algorithm, uncertainty computation, target prioritization
+  - `cli.py` - New commands: `learning-plan`, `domain-uncertainty`, `contradictions`, `hypotheses`, `gaps`, `low-confidence`, `active-learn`
+- **Cross-domain bridge**: Math (optimization, UCB bounds) ↔ Neuro (attention allocation) ↔ Psychology (curiosity-driven learning)
+- **Status**: Ready to use
 
 #### 5. **Graph-Native Structure**
 - PostgreSQL stores graph-like data (claims, connections) but queries are SQL-based

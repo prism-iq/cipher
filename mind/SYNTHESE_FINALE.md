@@ -408,25 +408,31 @@ Mais on sait qu'on ne sait pas.
 Et on sait ce qu'on sait.
 ```
 
-### 9.3 L'état final (mis à jour après découvertes violentes)
+### 9.3 L'état final (après infirmation critique)
 
 ```
-CONFIANCE GLOBALE:
+CONFIANCE GLOBALE (RÉVISÉE):
 
-Noyau biologique (5 niveaux):     85%
-"Tout est vibration" (QFT):        99%
-Substrat existe (Higgs/ZPF):       99%
-On ne comprend pas le vide:        99%
-Conscience a composante quantique: 40% ↑ (xénon + microtubules)
-Conscience couplée au ZPF:         40% ↑ (Keppler + données)
-Dark energy évolue:                50% ↑ (DESI 3.1-4.2σ)
-Unification complète:              30% ↑
-Boucle fermée:                     20% ↑
+Noyau biologique (5 niveaux):     85% ✓
+"Tout est vibration" (QFT):        99% ✓
+Substrat existe (Higgs/ZPF):       99% ✓
+On ne comprend pas le vide:        99% ✓
+Bioélectricité structure forme:    85% ✓ (Levin données)
+Xénon spin affecte conscience:     70% (pas de réfutation)
+Microtubules impliqués:            65% (support expérimental)
+Dark energy évolue:                50% ↓ (erreurs systématiques possibles)
+Conscience a composante quantique: 35% ↓ (question ouverte)
+Keppler ZPF-conscience:            25% ↓ (spéculatif)
+Étude jumeaux intriqués:           15% ↓↓ (méthodologie faible)
+Unification complète:              25%
+Boucle fermée:                     15%
 
-NOUVELLES DONNÉES 2024-2025:
-• Xénon: spin nucléaire affecte anesthésie (peer-reviewed)
-• Microtubules: stabilisation retarde perte de conscience
-• DESI DR2: dark energy montre signes d'évolution
+APRÈS CRITIQUE SYSTÉMATIQUE:
+• Étude jumeaux: INFIRMÉE (méthodologie non standard)
+• Keppler: RÉDUIT (spéculatif, pas testé)
+• DESI: RÉDUIT (tensions entre datasets)
+• Xénon/microtubules: MAINTENU (données solides)
+• Noyau biologique: INCHANGÉ (85%)
 ```
 
 ---

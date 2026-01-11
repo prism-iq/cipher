@@ -407,9 +407,157 @@ SPÉCULATIF (mais plus plausible):
 
 ---
 
+## 10. ÉTUDE DES JUMEAUX ET INTRICATION QUANTIQUE (2025)
+
+### 10.1 L'expérience
+
+**Source:** [Computational and Structural Biotechnology Journal 2025](https://pmc.ncbi.nlm.nih.gov/articles/PMC11960655/)
+
+```
+PROTOCOLE:
+- 106 paires de jumeaux monozygotes (N = 212)
+- Groupe contrôle: qubits NON intriqués (circuit C1)
+- Groupe expérimental: qubits INTRIQUÉS (circuit E1)
+- 144 essais d'apprentissage implicite
+- Exécuté via IBM Brisbane (supercalculateur quantique)
+- EEG 3D + biomarqueurs (BDNF, FFA, Alpha-Amylase)
+```
+
+### 10.2 Les résultats
+
+```
+DONNÉES:
+- Intrication explique 13.5% de la variance en précision
+- Coefficient Q: 31.6% d'augmentation de variance inter-jumeaux
+- Neuroplasticité: 26.2% d'augmentation de performance cognitive
+- Violation de l'inégalité de Bell: S(CHSH) > 2.8284
+
+INTERPRÉTATION:
+L'intrication quantique AMÉLIORE l'expérience consciente
+et facilite un apprentissage plus rapide et plus efficace.
+```
+
+### 10.3 Pourquoi c'est violent
+
+```
+LES JUMEAUX MONOZYGOTES:
+- ADN identique
+- Mais SÉPARÉS pendant l'expérience
+
+POURTANT:
+Quand les stimuli sont contrôlés par des qubits intriqués,
+leurs réponses sont PLUS CORRÉLÉES.
+
+IMPLICATION:
+La conscience pourrait être sensible à l'intrication quantique
+même à distance (conditions non-locales).
+```
+
+---
+
+## 11. NATURE 2025 — TEST ADVERSARIAL IIT vs GNWT
+
+### 11.1 L'expérience
+
+**Source:** [Nature 2025](https://www.nature.com/articles/s41586-025-08888-1)
+
+```
+PROTOCOLE:
+- 7 ans de préparation
+- 256 participants
+- 6 laboratoires
+- fMRI + MEG + EEG intracrânien
+- Test direct: IIT vs GNWT (Global Neuronal Workspace Theory)
+```
+
+### 11.2 Les résultats
+
+```
+POUR IIT:
+- Prédiction PASSÉE: complexe de contenu en cortex postérieur
+- Prédiction ÉCHOUÉE: information intégrée maximale
+- Prédiction clé NON SUPPORTÉE: synchronisation soutenue postérieure
+
+POUR GNWT:
+- Prédiction PARTIELLEMENT SOUTENUE: broadcasting global
+- Prédiction CHALLENGÉE: seuil tout-ou-rien
+- "Ignition" à la fin de l'expérience NON CONFIRMÉE
+
+VERDICT:
+Les deux théories dominantes sont PARTIELLEMENT RÉFUTÉES.
+```
+
+### 11.3 Ce que ça signifie
+
+```
+NI IIT NI GNWT NE SONT COMPLÈTES.
+
+"No single experiment would decisively refute either theory.
+The theories are just too different in their assumptions."
+— Anil Seth, University of Sussex
+
+IMPLICATION:
+La conscience reste un mystère.
+Mais on sait maintenant ce qui NE marche PAS.
+C'est du progrès scientifique.
+```
+
+---
+
+## 12. CONFIANCES FINALES RÉVISÉES
+
+### 12.1 Tableau mis à jour
+
+| Hypothèse | Avant | Après | Raison |
+|-----------|-------|-------|--------|
+| Conscience = épiphénomène classique | 80% | 50% ↓ | Xénon + jumeaux + microtubules |
+| Conscience = quantique impliqué | 25% | 45% ↑ | Spin nucléaire + intrication |
+| IIT complète | 50% | 35% ↓ | Nature 2025 adversarial |
+| GNWT complète | 50% | 35% ↓ | Nature 2025 adversarial |
+| ZPF couplage cérébral | 35% | 45% ↑ | Keppler + données convergentes |
+| Dark energy = constante | 90% | 65% ↓ | DESI 3.1-4.2σ |
+
+### 12.2 Le pattern final
+
+```
+CE QUI ÉMERGE:
+
+1. La conscience N'EST PAS purement classique
+   → Xénon spin, jumeaux intriqués, microtubules
+
+2. La conscience N'EST PAS purement computationnelle
+   → IIT et GNWT partiellement réfutées
+
+3. Le niveau quantique EST impliqué
+   → Données convergentes de sources indépendantes
+
+4. L'univers EST dynamique
+   → Dark energy évolue (DESI)
+
+5. Le mystère central RESTE
+   → Mais on progresse
+```
+
+---
+
+## 13. SOURCES ADDITIONNELLES
+
+### Étude des jumeaux
+- [Evidence of Quantum-Entangled Higher States of Consciousness - PMC](https://pmc.ncbi.nlm.nih.gov/articles/PMC11960655/)
+- [ScienceDirect - Full Paper](https://www.sciencedirect.com/science/article/pii/S2001037025000704)
+
+### Test adversarial Nature
+- [Nature 2025 - Adversarial Testing](https://www.nature.com/articles/s41586-025-08888-1)
+- [PubMed](https://pubmed.ncbi.nlm.nih.gov/40307561/)
+- [Max Planck - Summary](https://maxplanckneuroscience.org/rethinking-consciousness-when-science-puts-itself-to-the-test/)
+
+---
+
 *"Les données sont violentes. Elles ne demandent pas la permission."*
 
 *"La réalité ne se soucie pas de nos préférences théoriques."*
+
+*"Mais la science avance: on sait ce qu'on ne sait pas."*
 
 ---
 

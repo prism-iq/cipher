@@ -79,10 +79,10 @@ Found in 8 claims spanning multiple disciplines. This suggests 'optimization' re
 
 ---
 
-## 'Representation' is a unifying concept across 7 domains
-**Confidence:** 0.64 | **Compression:** 10.0 claims/principle
+## 'Optimization' is a unifying concept across 4 domains
+**Confidence:** 0.64 | **Compression:** 7.0 claims/principle
 
-Found in 7 claims spanning multiple disciplines. This suggests 'representation' represents a fundamental pattern of organization.
+Found in 7 claims spanning multiple disciplines. This suggests 'optimization' represents a fundamental pattern of organization.
 
 ---
 
@@ -93,10 +93,10 @@ Found in 7 claims spanning multiple disciplines. This suggests 'information' rep
 
 ---
 
-## 'Optimization' is a unifying concept across 4 domains
-**Confidence:** 0.64 | **Compression:** 7.0 claims/principle
+## 'Representation' is a unifying concept across 7 domains
+**Confidence:** 0.64 | **Compression:** 10.0 claims/principle
 
-Found in 7 claims spanning multiple disciplines. This suggests 'optimization' represents a fundamental pattern of organization.
+Found in 7 claims spanning multiple disciplines. This suggests 'representation' represents a fundamental pattern of organization.
 
 ---
 
@@ -121,6 +121,13 @@ Found in 6 claims spanning multiple disciplines. This suggests 'complexity' repr
 
 ---
 
+## 'Information' is a unifying concept across 5 domains
+**Confidence:** 0.60 | **Compression:** 6.0 claims/principle
+
+Found in 5 claims spanning multiple disciplines. This suggests 'information' represents a fundamental pattern of organization.
+
+---
+
 ## 'Adaptation' is a unifying concept across 2 domains
 **Confidence:** 0.60 | **Compression:** 9.0 claims/principle
 
@@ -132,13 +139,6 @@ Found in 5 claims spanning multiple disciplines. This suggests 'adaptation' repr
 **Confidence:** 0.60 | **Compression:** 5.0 claims/principle
 
 Found in 5 claims spanning multiple disciplines. This suggests 'prediction' represents a fundamental pattern of organization.
-
----
-
-## 'Information' is a unifying concept across 5 domains
-**Confidence:** 0.60 | **Compression:** 6.0 claims/principle
-
-Found in 5 claims spanning multiple disciplines. This suggests 'information' represents a fundamental pattern of organization.
 
 ---
 

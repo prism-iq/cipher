@@ -73,6 +73,12 @@ PHASE 6: APPLICATION PRATIQUE
 |----------|---------|------------|
 | `PROTOCOLE_PRATIQUE.md` | Ce qu'on peut faire maintenant | **OUI** |
 
+### Phase 7: Découvertes violentes (2024-2026)
+
+| Document | Contenu | Impact |
+|----------|---------|--------|
+| `DECOUVERTES_VIOLENTES.md` | Xénon, microtubules, DESI | **TRÈS ÉLEVÉ** |
+
 ---
 
 ## RÉSUMÉ DES CONFIANCES
@@ -88,7 +94,7 @@ PHASE 6: APPLICATION PRATIQUE
 | Propagation réseau | 85% | **85%** ✓ |
 | Champ EM cardiaque affecte autrui | 80% | **50%** ↓ |
 | Biophotons = communication | 60% | **20%** ↓ |
-| Conscience quantique | 40% | **25%** ↓ |
+| Conscience quantique | 40% | **40%** = (xénon + microtubules 2024) |
 | Schumann affecte cerveau | 50% | **35%** ↓ |
 | Univers a une direction | 50% | **30%** ↓ |
 | Intention affecte RNG | 20% | **5%** ↓ |

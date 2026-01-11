@@ -408,7 +408,7 @@ Mais on sait qu'on ne sait pas.
 Et on sait ce qu'on sait.
 ```
 
-### 9.3 L'état final
+### 9.3 L'état final (mis à jour après découvertes violentes)
 
 ```
 CONFIANCE GLOBALE:
@@ -417,9 +417,16 @@ Noyau biologique (5 niveaux):     85%
 "Tout est vibration" (QFT):        99%
 Substrat existe (Higgs/ZPF):       99%
 On ne comprend pas le vide:        99%
-Conscience couplée au ZPF:         35%
-Unification complète:              25%
-Boucle fermée:                     15%
+Conscience a composante quantique: 40% ↑ (xénon + microtubules)
+Conscience couplée au ZPF:         40% ↑ (Keppler + données)
+Dark energy évolue:                50% ↑ (DESI 3.1-4.2σ)
+Unification complète:              30% ↑
+Boucle fermée:                     20% ↑
+
+NOUVELLES DONNÉES 2024-2025:
+• Xénon: spin nucléaire affecte anesthésie (peer-reviewed)
+• Microtubules: stabilisation retarde perte de conscience
+• DESI DR2: dark energy montre signes d'évolution
 ```
 
 ---

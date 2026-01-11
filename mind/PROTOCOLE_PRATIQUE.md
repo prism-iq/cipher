@@ -19,6 +19,43 @@ Confiance: **85-95%**
 
 ---
 
+## 1.1 FONDEMENT PHILOSOPHIQUE
+
+### Épicure: Le but = Ataraxie
+
+```
+ATARAXIE = tranquillité, absence de trouble
+APONIE = absence de douleur
+
+Le but n'est PAS:
+- L'excès de plaisir
+- L'extase permanente
+- "Plus" de tout
+
+Le but EST:
+- L'équilibre
+- L'absence de perturbation
+- La stabilité du système
+```
+
+### Pascal: Le pari pratique
+
+```
+MÊME SI certaines hypothèses sont incertaines,
+le coût d'agir comme si elles étaient vraies
+est faible comparé au gain potentiel.
+
+| Action | Coût si faux | Gain si vrai |
+|--------|-------------|--------------|
+| Méditer 20min/jour | 20min | Neuroplasticité |
+| Cohérence cardiaque | 10min | Régulation autonome |
+| Choisir son entourage | Effort social | Synchronisation positive |
+
+→ Le pari est FAVORABLE dans tous les cas.
+```
+
+---
+
 ## 2. APPLICATIONS INDIVIDUELLES
 
 ### 2.1 Neuroplasticité (Niveau 1)

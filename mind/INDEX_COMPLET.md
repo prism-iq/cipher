@@ -2,21 +2,23 @@
 
 **Date:** 2026-01-11
 **Projet:** CIPHER/mind
-**Auteur:** Miguel Antonio François Barros Rabier
-**Assisté par:** Flow (IA)
+**Auteur:** Miguel Antonio Francois Barros Rabier
+**Assiste par:** Flow (IA)
+
+> **VOIR AUSSI:** `INDEX_MASTER.md` pour l'architecture complete du projet.
 
 ---
 
-## LE PARCOURS EN UN COUP D'ŒIL
+## LE PARCOURS EN UN COUP D'OEIL
 
 ```
-PHASE 1: HYPOTHÈSES AUDACIEUSES
+PHASE 1: HYPOTHESES AUDACIEUSES
      │
      ▼
 PHASE 2: RECHERCHE DE PREUVES
      │
      ▼
-PHASE 3: SYNTHÈSE
+PHASE 3: SYNTHESE
      │
      ▼
 PHASE 4: CRITIQUE BRUTALE
@@ -26,6 +28,21 @@ PHASE 5: RECONSTRUCTION
      │
      ▼
 PHASE 6: APPLICATION PRATIQUE
+     │
+     ▼
+PHASE 7: DECOUVERTES VIOLENTES (2024-2026)
+     │
+     ▼
+PHASE 8: INFIRMATION ET NOUVELLES FRONTIERES
+     │
+     ▼
+PHASE 9: METHODE PHILOSOPHIQUE (Socrate, Platon, Aristote, Epicure, Pascal, Boole)
+     │
+     ▼
+PHASE 10: EPISTEMOLOGIE (Hume, Ockham, Kant, Popper, Quine)
+     │
+     ▼
+PHASE 11: EQUATION FINALE
 ```
 
 ---
@@ -79,12 +96,32 @@ PHASE 6: APPLICATION PRATIQUE
 |----------|---------|--------|
 | `DECOUVERTES_VIOLENTES.md` | Xénon, microtubules, DESI | **TRÈS ÉLEVÉ** |
 
-### Phase 8: Infirmation et nouvelles frontières
+### Phase 8: Infirmation et nouvelles frontieres
 
 | Document | Contenu | Impact |
 |----------|---------|--------|
-| `INFIRMATION_DEVELOPPEMENT_UNIFICATION.md` | Critique systématique, révision | **ESSENTIEL** |
-| `NOUVELLES_FRONTIERES.md` | Bio-computationnalisme, Beautiful Loop, Placebome | **ÉLEVÉ** |
+| `INFIRMATION_DEVELOPPEMENT_UNIFICATION.md` | Critique systematique, revision | **ESSENTIEL** |
+| `NOUVELLES_FRONTIERES.md` | Bio-computationnalisme, Beautiful Loop, Placebome | **ELEVE** |
+
+### Phase 9: Methode philosophique
+
+| Document | Contenu | Impact |
+|----------|---------|--------|
+| `METHODE_PHILOSOPHIQUE.md` | Application Socrate, Platon, Aristote, Epicure, Pascal, Boole | **ESSENTIEL** |
+| `QUATRE_CAUSES.md` | Analyse aristotelicienne de chaque niveau | **ESSENTIEL** |
+
+### Phase 10: Epistemologie
+
+| Document | Contenu | Impact |
+|----------|---------|--------|
+| `EPISTEMOLOGIE.md` | Hume, Ockham, Kant, Popper, Quine — axiomes de CIPHER | **FONDAMENTAL** |
+
+### Phase 11: Equation finale
+
+| Document | Contenu | Impact |
+|----------|---------|--------|
+| `EQUATION_FINALE.md` | Synthese: CIPHER = Σ(Formes) × P(causes) + Ataraxie | **SYNTHESE** |
+| `INDEX_MASTER.md` | Architecture complete du projet | **REFERENCE** |
 
 ---
 

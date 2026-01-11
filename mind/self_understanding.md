@@ -1,6 +1,6 @@
 # Cipher Self-Understanding
-Generated: 2026-01-11T12:58:43.056174
-Cycle: 210
+Generated: 2026-01-11T13:03:45.394290
+Cycle: 211
 
 ## What I Think I Know (Principles)
 
@@ -8,22 +8,22 @@ Cycle: 210
 - **'Network' is a unifying concept across 8 domains** (confidence: 90%, compression: 54x)
 - **'Learning' is a unifying concept across 8 domains** (confidence: 90%, compression: 35x)
 - **'Learning' is a unifying concept across 7 domains** (confidence: 84%, compression: 31x)
-- **'Learning' is a unifying concept across 6 domains** (confidence: 82%, compression: 16x)
+- **'Prediction' is a unifying concept across 8 domains** (confidence: 82%, compression: 19x)
 
 
 ## What I Cannot Answer (Hard Questions)
 
-- What question am I NOT asking that I should be asking? (attempts: 0, confidence: ?)
+- What would a human notice in this data that I am systematically blind to? (attempts: 0, confidence: ?)
 - With 3093 claims, what is the ONE thing I should understand but don't? (attempts: 0, confidence: ?)
 
 
 ## What I Believe Causes What
 
-- **disrupted neural** → **connectivity** (evidence: 2347)
-- **the ecological** → **and consequences** (evidence: 1497)
-- **and may** → **durable long** (evidence: 1283)
-- **connectivity alone** → **small** (evidence: 1228)
-- **of unknown** → **was linked** (evidence: 1069)
+- **disrupted neural** → **connectivity** (evidence: 2359)
+- **the ecological** → **and consequences** (evidence: 1504)
+- **and may** → **durable long** (evidence: 1289)
+- **connectivity alone** → **small** (evidence: 1235)
+- **of unknown** → **was linked** (evidence: 1074)
 
 
 ## Honest Assessment

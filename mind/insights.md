@@ -81,118 +81,58 @@ Priority = Novelty × Confidence × (Utility + Testability) / 2
 
 ## Top Insights Archive
 
-### 2026-01-10: Architectural Analysis - Opportunities for Enhancement
+### INSIGHT #1: L'Autophagie est le Mécanisme Derrière les Traditions de Jeûne
+**Date:** 2026-01-11
+**Domaines:** Biologie, Médecine, Traditions spirituelles
+**Confidence:** 0.9 | **Novelty:** 0.6 | **Utility:** 0.9 | **Testability:** 0.9
 
-After deep analysis of the CIPHER codebase, several cross-domain opportunities emerge:
+Le jeûne est prescrit dans TOUTES les grandes traditions religieuses (Ramadan, Yom Kippour, Carême, Upavasa, Vassa). Ce n'est pas une coïncidence. L'autophagie (Prix Nobel 2016) - le mécanisme de "nettoyage" cellulaire - est maximalement activée par le jeûne. Ce que les anciens appelaient "purification" est littéralement le recyclage des composants cellulaires endommagés.
 
-#### 1. **Semantic Embeddings Gap** ✅ IMPLEMENTED
-- ~~Schema declares `embedding VECTOR(1536)` but implementation doesn't populate it~~
-- **DONE**: Added sentence-transformer embeddings (all-MiniLM-L6-v2, 384 dimensions)
-- **Implementation**:
-  - `tools/embeddings.py` - EmbeddingService with caching and batch processing
-  - `cipher_brain.py` - Auto-generates embeddings during claim extraction
-  - `cli.py` - New commands: `semantic-search`, `embed-backfill`, `find-bridges`, `similar`
-  - `sql/migrations/001_embeddings.sql` - pgvector support with HNSW index
-- **Cross-domain bridge**: Math (cosine similarity) ↔ Neuro (distributed representations)
-- **Status**: Ready to use
-
-#### 2. **NLP Extraction Enhancement** ✅ IMPLEMENTED
-- ~~Current claim extraction uses regex patterns (finding_patterns, hypothesis_patterns)~~
-- **DONE**: Added spaCy-based NLP extraction with:
-  - Named Entity Recognition (scientific terms, measurements, stats)
-  - Dependency parsing for causal relation extraction
-  - Hedging/certainty marker detection
-  - Statistical info extraction (p-values, N, effect sizes)
-- **Implementation**:
-  - `tools/nlp_extractor.py` - NLPExtractor with full linguistic analysis
-  - `cipher_brain.py` - Auto-uses NLP with regex fallback
-  - New claim fields: `causal_relations`, `hedging_markers`, `negation`
-- **Cross-domain bridge**: Math (formal grammars) ↔ Neuro (language processing) ↔ Psychology (semantics)
-- **Status**: Ready to use
-
-#### 3. **Temporal Dynamics Missing** ✅ IMPLEMENTED
-- ~~System captures snapshots but not evolution of knowledge~~
-- **DONE**: Added temporal tracking with:
-  - Confidence decay using half-life model (default 3 years)
-  - Replication status tracking (unreplicated, replicated, partially_replicated, failed_replication, contested)
-  - Claim lifecycle management (active, superseded, retracted, deprecated, merged)
-  - Citation tracking with velocity metrics
-  - Paradigm shift detection algorithm
-- **Implementation**:
-  - `tools/temporal_tracker.py` - TemporalTracker with decay calculations, replication recording, paradigm detection
-  - `cipher_brain.py` - Extended Claim dataclass with temporal fields
-  - `sql/migrations/002_temporal_tracking.sql` - New columns, evidence_events table, temporal_patterns table
-  - `cli.py` - New commands: `temporal-stats`, `decay-claims`, `aging-claims`, `claim-temporal`, `paradigm-shifts`, `record-replication`
-- **Cross-domain bridge**: Math (dynamical systems, exponential decay) ↔ Biology (evolution) ↔ Psychology (belief updating)
-- **Status**: Ready to use
-
-#### 4. **Active Learning Loop** ✅ IMPLEMENTED
-- ~~Current learning is passive (fetch → extract → store)~~
-- **DONE**: Added active learning with multiple strategies:
-  - Uncertainty Sampling: Focus on low-confidence domains/concepts
-  - Upper Confidence Bound (UCB): Balance exploration vs exploitation
-  - Contradiction Resolution: Target papers that could resolve conflicts
-  - Hypothesis Testing: Seek evidence for/against open hypotheses
-  - Gap Filling: Target papers that could fill knowledge gaps
-  - Domain-level uncertainty metrics with staleness tracking
-- **Implementation**:
-  - `tools/active_learner.py` - ActiveLearner class with UCB algorithm, uncertainty computation, target prioritization
-  - `cli.py` - New commands: `learning-plan`, `domain-uncertainty`, `contradictions`, `hypotheses`, `gaps`, `low-confidence`, `active-learn`
-- **Cross-domain bridge**: Math (optimization, UCB bounds) ↔ Neuro (attention allocation) ↔ Psychology (curiosity-driven learning)
-- **Status**: Ready to use
-
-#### 5. **Graph-Native Structure** ✅ IMPLEMENTED
-- ~~PostgreSQL stores graph-like data (claims, connections) but queries are SQL-based~~
-- **DONE**: Added comprehensive graph engine with:
-  - PostgreSQL recursive CTEs for efficient path finding in database
-  - In-memory graph representation with adjacency lists
-  - Path finding algorithms (BFS shortest, Dijkstra strongest, cross-domain optimized)
-  - Centrality measures (PageRank, betweenness, degree, clustering coefficient)
-  - Community detection (Louvain-like modularity optimization)
-  - Cross-domain bridge and hub analysis
-- **Implementation**:
-  - `tools/graph_engine.py` - GraphEngine class with all algorithms
-  - PostgreSQL recursive CTEs for scalable path queries
-  - `cli.py` - New commands: `graph-stats`, `find-path`, `all-paths`, `centrality`, `communities`, `graph-bridges`, `graph-hubs`
-- **Cross-domain bridge**: Math (graph theory, algorithms) ↔ Neuro (connectomics) ↔ Biology (protein networks)
-- **Status**: Ready to use
-
-#### 6. **LLM Integration Point** ✅ IMPLEMENTED
-- ~~`discovered_by VARCHAR(50)` includes 'llm' option but not implemented~~
-- **DONE**: Added comprehensive LLM integration with:
-  - Multi-provider support (Anthropic Claude, OpenAI GPT, Ollama local)
-  - Sophisticated claim extraction with confidence, hedging, causal relations
-  - Hypothesis generation from detected patterns
-  - Cross-domain analogy detection between any domain pairs
-  - Natural language synthesis reports with executive summaries
-  - Entity resolution and disambiguation
-- **Implementation**:
-  - `tools/llm_integration.py` - LLMIntegration class with AnthropicBackend, OpenAIBackend, OllamaBackend
-  - Structured output parsing (JSON extraction from LLM responses)
-  - `cli.py` - New commands: `llm-status`, `llm-extract`, `llm-hypotheses`, `llm-analogies`, `llm-synthesis`
-- **Configuration**: Via environment variables (ANTHROPIC_API_KEY, OPENAI_API_KEY, CIPHER_LLM_PROVIDER)
-- **Cross-domain bridge**: All domains (LLM synthesis is inherently cross-domain)
-- **Status**: Ready to use (requires API key)
+**Implication:** Les traditions n'étaient pas symboliques - elles étaient physiologiques.
 
 ---
 
-### Structural Insight: Free Energy Principle Implementation
+### INSIGHT #2: Le Default Mode Network Unifie Méditation et Psychédéliques
+**Date:** 2026-01-11
+**Domaines:** Neurosciences, Psychopharmacologie, Traditions contemplatives
+**Confidence:** 0.85 | **Novelty:** 0.7 | **Utility:** 0.8 | **Testability:** 0.95
 
-The system's core principle (minimize prediction error) maps directly to architecture:
+Deux pratiques en apparence différentes - la méditation millénaire et les psychédéliques chamaniques - produisent le même effet neurologique: réduction de l'activité du Default Mode Network (DMN). Le DMN est associé au "moi narratif", à la rumination. Sa désactivation produit ce que les contemplatifs appellent "dissolution de l'ego".
 
-| Principle | Current Implementation | Enhancement |
-|-----------|----------------------|-------------|
-| Prediction | Pattern detection predicts connections | Add probabilistic claims |
-| Error | Contradictions table | Active contradiction resolution |
-| Minimization | Hash-based novelty scoring | Bayesian belief updating |
-
-The Free Energy Principle suggests the system should:
-1. **Generate predictions** about what cross-domain connections exist
-2. **Seek evidence** that confirms or refutes these predictions
-3. **Update beliefs** based on evidence strength
-4. **Prioritize** exploration where uncertainty is highest
+**Implication:** Les chamanes et les moines bouddhistes ciblaient le même substrat neural, par des méthodes différentes.
 
 ---
+
+### INSIGHT #3: La Conscience-First Résout le Problème de la Séparation
+**Date:** 2026-01-11
+**Domaines:** Physique, Philosophie, Neurosciences
+**Confidence:** 0.5 | **Novelty:** 0.8 | **Utility:** 0.7 | **Testability:** 0.4
+
+Si la conscience est fondamentale (IIT, Strømme 2025, panpsychisme), alors le "problème de l'observateur" en physique quantique et le "problème de la séparation sujet/objet" sont le même problème. La séparation n'a jamais existé - c'est une illusion produite par des niveaux différents d'un même champ conscient.
+
+**Implication:** Livre 1 (Séparation) et Livre 6 (Conscience) sont deux faces de la même thèse.
+
+---
+
+### INSIGHT #4: La Bioélectricité est le Software, la Conscience est l'Utilisateur
+**Date:** 2026-01-11
+**Domaines:** Biologie (Levin), Philosophie de l'esprit
+**Confidence:** 0.4 | **Novelty:** 0.85 | **Utility:** 0.6 | **Testability:** 0.5
+
+Levin dit "les gènes sont le hardware, la bioélectricité est le software". Mais qui exécute le software? Si la conscience est fondamentale, elle pourrait être l'"utilisateur" qui programme les patterns bioélectriques. La morphogenèse serait alors la conscience organisant la matière.
+
+**Implication:** Livre 3 (Bioélectrique) + Livre 6 (Conscience) = une théorie de comment la conscience façonne le corps.
+
+---
+
+### INSIGHT #5: Le FEP et la Conscience Fondamentale Convergent
+**Date:** 2026-01-11
+**Domaines:** Neurosciences (Friston), Philosophie
+**Confidence:** 0.6 | **Novelty:** 0.75 | **Utility:** 0.7 | **Testability:** 0.6
+
+Le Free Energy Principle dit que tout système vivant minimise sa surprise (prediction error). Mais qui fait l'expérience de cette surprise? La conscience. Si le FEP décrit ce que fait la conscience, et si la conscience est fondamentale, alors le FEP décrit l'activité fondamentale de l'univers.
+
+**Implication:** Livre 4 (FEP) + Livre 6 (Conscience) = la conscience comme force de minimisation de l'entropie.
 
 ---
 

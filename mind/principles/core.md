@@ -2,13 +2,6 @@
 
 Compressed understanding from claims.
 
-## 'Network' is a unifying concept across 7 domains
-**Confidence:** 0.90 | **Compression:** 45.0 claims/principle
-
-Found in 45 claims spanning multiple disciplines. This suggests 'network' represents a fundamental pattern of organization.
-
----
-
 ## 'Learning' is a unifying concept across 8 domains
 **Confidence:** 0.90 | **Compression:** 35.0 claims/principle
 
@@ -23,6 +16,13 @@ Found in 53 claims spanning multiple disciplines. This suggests 'network' repres
 
 ---
 
+## 'Network' is a unifying concept across 7 domains
+**Confidence:** 0.90 | **Compression:** 45.0 claims/principle
+
+Found in 45 claims spanning multiple disciplines. This suggests 'network' represents a fundamental pattern of organization.
+
+---
+
 ## 'Learning' is a unifying concept across 7 domains
 **Confidence:** 0.84 | **Compression:** 31.0 claims/principle
 
@@ -30,17 +30,17 @@ Found in 17 claims spanning multiple disciplines. This suggests 'learning' repre
 
 ---
 
-## 'Prediction' is a unifying concept across 8 domains
-**Confidence:** 0.82 | **Compression:** 19.0 claims/principle
-
-Found in 16 claims spanning multiple disciplines. This suggests 'prediction' represents a fundamental pattern of organization.
-
----
-
 ## 'Learning' is a unifying concept across 6 domains
 **Confidence:** 0.82 | **Compression:** 16.0 claims/principle
 
 Found in 16 claims spanning multiple disciplines. This suggests 'learning' represents a fundamental pattern of organization.
+
+---
+
+## 'Prediction' is a unifying concept across 8 domains
+**Confidence:** 0.82 | **Compression:** 19.0 claims/principle
+
+Found in 16 claims spanning multiple disciplines. This suggests 'prediction' represents a fundamental pattern of organization.
 
 ---
 
@@ -107,13 +107,6 @@ Found in 7 claims spanning multiple disciplines. This suggests 'information' rep
 
 ---
 
-## 'Complexity' is a unifying concept across 8 domains
-**Confidence:** 0.62 | **Compression:** 6.0 claims/principle
-
-Found in 6 claims spanning multiple disciplines. This suggests 'complexity' represents a fundamental pattern of organization.
-
----
-
 ## 'Entropy' is a unifying concept across 3 domains
 **Confidence:** 0.62 | **Compression:** 8.0 claims/principle
 
@@ -121,17 +114,17 @@ Found in 6 claims spanning multiple disciplines. This suggests 'entropy' represe
 
 ---
 
-## 'Prediction' is a unifying concept across 5 domains
-**Confidence:** 0.60 | **Compression:** 5.0 claims/principle
+## 'Complexity' is a unifying concept across 8 domains
+**Confidence:** 0.62 | **Compression:** 6.0 claims/principle
 
-Found in 5 claims spanning multiple disciplines. This suggests 'prediction' represents a fundamental pattern of organization.
+Found in 6 claims spanning multiple disciplines. This suggests 'complexity' represents a fundamental pattern of organization.
 
 ---
 
-## 'Information' is a unifying concept across 5 domains
-**Confidence:** 0.60 | **Compression:** 6.0 claims/principle
+## 'Adaptation' is a unifying concept across 2 domains
+**Confidence:** 0.60 | **Compression:** 9.0 claims/principle
 
-Found in 5 claims spanning multiple disciplines. This suggests 'information' represents a fundamental pattern of organization.
+Found in 5 claims spanning multiple disciplines. This suggests 'adaptation' represents a fundamental pattern of organization.
 
 ---
 
@@ -142,10 +135,17 @@ Found in 5 claims spanning multiple disciplines. This suggests 'emergence' repre
 
 ---
 
-## 'Adaptation' is a unifying concept across 2 domains
-**Confidence:** 0.60 | **Compression:** 9.0 claims/principle
+## 'Information' is a unifying concept across 5 domains
+**Confidence:** 0.60 | **Compression:** 6.0 claims/principle
 
-Found in 5 claims spanning multiple disciplines. This suggests 'adaptation' represents a fundamental pattern of organization.
+Found in 5 claims spanning multiple disciplines. This suggests 'information' represents a fundamental pattern of organization.
+
+---
+
+## 'Prediction' is a unifying concept across 5 domains
+**Confidence:** 0.60 | **Compression:** 5.0 claims/principle
+
+Found in 5 claims spanning multiple disciplines. This suggests 'prediction' represents a fundamental pattern of organization.
 
 ---
 

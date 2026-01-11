@@ -79,6 +79,13 @@ PHASE 6: APPLICATION PRATIQUE
 |----------|---------|--------|
 | `DECOUVERTES_VIOLENTES.md` | Xénon, microtubules, DESI | **TRÈS ÉLEVÉ** |
 
+### Phase 8: Infirmation et nouvelles frontières
+
+| Document | Contenu | Impact |
+|----------|---------|--------|
+| `INFIRMATION_DEVELOPPEMENT_UNIFICATION.md` | Critique systématique, révision | **ESSENTIEL** |
+| `NOUVELLES_FRONTIERES.md` | Bio-computationnalisme, Beautiful Loop, Placebome | **ÉLEVÉ** |
+
 ---
 
 ## RÉSUMÉ DES CONFIANCES

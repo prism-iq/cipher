@@ -126,7 +126,7 @@ class LearningConfig:
 @dataclass
 class PathConfig:
     """File system paths"""
-    base_path: Path = Path(os.getenv("CIPHER_BASE_PATH", "/opt/cipher"))
+    base_path: Path = Path(os.getenv("CIPHER_BASE_PATH", str(Path.home() / "projects" / "cipher")))
 
     @property
     def mind_path(self) -> Path:

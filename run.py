@@ -9,6 +9,8 @@ Usage:
     python run.py --cross-domain     # Focus on cross-domain
     python run.py --patterns         # Run pattern detection only
     python run.py --report           # Generate synthesis report
+    python run.py --daemon           # Sensory-driven daemon mode
+    python run.py --status           # Show current sensory status
 """
 
 import asyncio
@@ -25,6 +27,7 @@ from config.settings import config
 from tools.cipher_brain import CipherBrain, Domain
 from tools.domain_learner import DomainLearner
 from tools.pattern_detector import PatternDetector
+from tools.senses_bridge import SensesBridge, sensory_learning_loop
 
 # Setup logging
 logging.basicConfig(
@@ -229,12 +232,112 @@ async def generate_report():
         await detector.close()
 
 
+async def run_daemon():
+    """
+    Run sensory-driven daemon mode.
+
+    Cipher learns continuously, modulated by music/senses:
+    - hype (high energy)  -> intense cross-domain learning
+    - chill (low energy)  -> reflective mode, pattern synthesis
+    - groovy (balanced)   -> steady learning
+
+    The music guides the forge.
+    """
+    import signal
+
+    logger.info("=" * 60)
+    logger.info("CIPHER DAEMON - Sensory Learning Mode")
+    logger.info(f"Iron Code: {config.iron_code}")
+    logger.info("Music guides the forge. The senses modulate.")
+    logger.info("=" * 60)
+
+    # Initialize components
+    brain = CipherBrain(config.db.connection_string)
+    await brain.connect()
+
+    learner = DomainLearner(brain, {
+        'email': config.api.openalex_email,
+        'pubmed_api_key': config.api.pubmed_api_key,
+        's2_api_key': config.api.semantic_scholar_api_key,
+    })
+
+    bridge = SensesBridge()
+
+    # Mode change logging
+    def on_mode_change(old_mode, new_mode):
+        logger.info(f"[SENSES] Mode shift: {old_mode.value} -> {new_mode.value}")
+        # Log the current music state
+        status = bridge.get_status()
+        logger.info(f"[SENSES] Energy: {status['music']['energy']:.2f}, Vibe: {status['music']['vibe']}")
+
+    bridge.on_mode_change(on_mode_change)
+
+    # Signal handler for graceful shutdown
+    def shutdown(signum, frame):
+        logger.info("Shutdown signal received")
+        bridge.stop()
+
+    signal.signal(signal.SIGINT, shutdown)
+    signal.signal(signal.SIGTERM, shutdown)
+
+    try:
+        # Start both the watcher and learning loop
+        watcher_task = asyncio.create_task(bridge.watch(interval=0.5))
+        learning_task = asyncio.create_task(sensory_learning_loop(
+            brain=brain,
+            learner=learner,
+            bridge=bridge,
+            domains=[Domain.NEUROSCIENCES, Domain.BIOLOGY, Domain.PSYCHOLOGY,
+                     Domain.MATHEMATICS, Domain.MEDICINE]
+        ))
+
+        # Wait for either to complete (usually shutdown)
+        await asyncio.gather(watcher_task, learning_task)
+
+    except asyncio.CancelledError:
+        logger.info("Daemon cancelled")
+    finally:
+        bridge.stop()
+        await learner.close()
+        await brain.close()
+
+    logger.info("Cipher daemon stopped")
+
+
+def show_status():
+    """Show current sensory status."""
+    bridge = SensesBridge()
+    bridge.update_state()
+    status = bridge.get_status()
+
+    print("\n" + "=" * 50)
+    print("  CIPHER SENSORY STATUS")
+    print("=" * 50)
+    print(f"\n  Learning Mode: {status['mode'].upper()}")
+    print(f"\n  Music:")
+    print(f"    Energy: {status['music']['energy']:.2f}")
+    print(f"    Groove: {status['music']['groove']:.2f}")
+    print(f"    Vibe:   {status['music']['vibe']}")
+    print(f"\n  Other Senses:")
+    print(f"    Mic active: {'yes' if status['mic_active'] else 'no'}")
+    print(f"    Vision:     {'active' if status['has_vision'] else 'inactive'}")
+    print(f"    Screen:     {'active' if status['has_screen'] else 'inactive'}")
+
+    params = bridge.state.get_learning_params()
+    print(f"\n  Learning Parameters ({status['mode']}):")
+    for k, v in params.items():
+        print(f"    {k}: {v}")
+    print("=" * 50 + "\n")
+
+
 def main():
     parser = argparse.ArgumentParser(description='CIPHER Learning System')
     parser.add_argument('--domain', type=str, help='Learn specific domain')
     parser.add_argument('--cross-domain', action='store_true', help='Focus on cross-domain')
     parser.add_argument('--patterns', action='store_true', help='Run pattern detection')
     parser.add_argument('--report', action='store_true', help='Generate report')
+    parser.add_argument('--daemon', action='store_true', help='Run sensory-driven daemon')
+    parser.add_argument('--status', action='store_true', help='Show sensory status')
     parser.add_argument('--max-papers', type=int, default=100, help='Max papers per domain')
 
     args = parser.parse_args()
@@ -243,7 +346,11 @@ def main():
     config.paths.mind_path.mkdir(parents=True, exist_ok=True)
     config.paths.logs_path.mkdir(parents=True, exist_ok=True)
 
-    if args.domain:
+    if args.status:
+        show_status()
+    elif args.daemon:
+        asyncio.run(run_daemon())
+    elif args.domain:
         asyncio.run(run_single_domain(args.domain, args.max_papers))
     elif args.patterns:
         asyncio.run(run_pattern_detection())

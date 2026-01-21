@@ -240,9 +240,9 @@ class CipherBrain:
         if self.pool:
             await self.pool.execute('''
                 INSERT INTO synthesis.thoughts
-                (thought, thought_type, content, domains, importance)
-                VALUES ($1, $2, $3, $4, $5)
-            ''', content, thought_type, content,
+                (thought_type, content, domains, importance)
+                VALUES ($1, $2, $3, $4)
+            ''', thought_type, content,
                 [d.value for d in (domains or [])], importance)
 
         logger.debug(f"Thought [{thought_type}]: {content[:100]}...")
